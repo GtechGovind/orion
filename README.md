@@ -8,7 +8,10 @@ Build typed LLM agents in Python, TypeScript, or Kotlin while a deterministic
 Rust state machine owns the execution semantics.
 
 [![CI](https://github.com/GtechGovind/orion/actions/workflows/ci.yml/badge.svg)](https://github.com/GtechGovind/orion/actions/workflows/ci.yml)
-[![Version](https://img.shields.io/badge/version-0.0.1-7c3aed)](CHANGELOG.md)
+[![GitHub Release](https://img.shields.io/github/v/release/GtechGovind/orion?logo=github)](https://github.com/GtechGovind/orion/releases/latest)
+[![PyPI](https://img.shields.io/pypi/v/orion-agent-sdk?logo=pypi&logoColor=white)](https://pypi.org/project/orion-agent-sdk/)
+[![npm](https://img.shields.io/npm/v/%40orion-runtime%2Fsdk?logo=npm)](https://www.npmjs.com/package/@orion-runtime/sdk)
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.gtechgovind/orion-kotlin-sdk?logo=apachemaven)](https://central.sonatype.com/artifact/io.github.gtechgovind/orion-kotlin-sdk)
 [![Rust](https://img.shields.io/badge/Rust-1.88%2B-d65d0e?logo=rust)](rust-toolchain.toml)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white)](sdks/python/README.md)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Node_20.17%2B-3178c6?logo=typescript&logoColor=white)](sdks/javascript/README.md)
@@ -31,6 +34,18 @@ runs in-process through PyO3, Node-API, or JNI—never through a JSON subprocess
 > **Release status:** `0.0.1` is the first usable pilot. The single-agent model
 > and tool loop is implemented and tested across all three SDKs. Durability,
 > approvals, retries, and policy enforcement remain roadmap work.
+
+## Live release
+
+| SDK | Public coordinate | Install `0.0.1` | Status |
+|---|---|---|---|
+| Python | [`orion-agent-sdk`](https://pypi.org/project/orion-agent-sdk/0.0.1/) | `python -m pip install orion-agent-sdk==0.0.1` | Published |
+| TypeScript/JavaScript | [`@orion-runtime/sdk`](https://www.npmjs.com/package/@orion-runtime/sdk/v/0.0.1) | `npm install @orion-runtime/sdk@0.0.1` | Published |
+| Kotlin/JVM | [`io.github.gtechgovind:orion-kotlin-sdk`](https://central.sonatype.com/artifact/io.github.gtechgovind/orion-kotlin-sdk/0.0.1) | `implementation("io.github.gtechgovind:orion-kotlin-sdk:0.0.1")` | Published; Central mirrors may take time to synchronize |
+
+The [GitHub release](https://github.com/GtechGovind/orion/releases/tag/v0.0.1)
+contains every supported native package and a portable `SHA256SUMS` manifest.
+Current binaries target macOS arm64, Linux x86-64 glibc, and Windows x86-64.
 
 ## Why Orion?
 
@@ -99,17 +114,54 @@ for all three languages live in [`examples/`](examples/README.md).
 ## How it works
 
 ```mermaid
-flowchart LR
-    App[Application] --> SDK[Idiomatic host SDK]
-    SDK --> Binding[PyO3 / Node-API / JNI]
-    Binding --> Core[Rust semantic core]
-    Core --> Effect{Next effect}
-    Effect -->|Model request| Provider[LLM provider]
-    Effect -->|Tool request| Tool[Typed application tool]
-    Provider --> SDK
-    Tool --> SDK
-    Core --> Result[Events + typed result]
-    Result --> App
+flowchart TB
+    subgraph Apps["Application code"]
+        direction LR
+        Py["Python<br/>typed functions"]
+        Ts["TypeScript<br/>Zod contracts"]
+        Kt["Kotlin<br/>serializable types"]
+    end
+
+    subgraph Sdks["Idiomatic SDKs"]
+        direction LR
+        PySdk["orion_sdk"]
+        TsSdk["@orion-runtime/sdk"]
+        KtSdk["dev.orion.sdk"]
+    end
+
+    subgraph Native["In-process native boundary"]
+        direction LR
+        PyO3["PyO3"]
+        Napi["Node-API"]
+        Jni["JNI"]
+    end
+
+    Kernel["Rust semantic kernel<br/>state · limits · events · validation"]
+    Decision{"Next effect"}
+    Model["LLM provider"]
+    Tool["Typed application tool"]
+    Result["Events + typed result"]
+
+    Py --> PySdk --> PyO3
+    Ts --> TsSdk --> Napi
+    Kt --> KtSdk --> Jni
+    PyO3 & Napi & Jni --> Kernel
+    Kernel --> Decision
+    Decision -->|model request| Model
+    Decision -->|tool request| Tool
+    Model & Tool -->|typed effect result| Kernel
+    Kernel --> Result --> Apps
+
+    classDef app fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef sdk fill:#f5f3ff,stroke:#7c3aed,color:#2e1065
+    classDef native fill:#fff7ed,stroke:#ea580c,color:#431407
+    classDef core fill:#ecfdf5,stroke:#059669,color:#022c22,stroke-width:2px
+    classDef effect fill:#fefce8,stroke:#ca8a04,color:#422006
+    class Py,Ts,Kt app
+    class PySdk,TsSdk,KtSdk sdk
+    class PyO3,Napi,Jni native
+    class Kernel,Result core
+    class Decision,Model,Tool effect
 ```
 
 The SDK performs provider and tool I/O, then resumes the Rust-owned run with a
@@ -117,6 +169,37 @@ typed effect result. Mutable kernel state stays in Rust; only versioned DTOs
 cross the native boundary. Read the
 [runtime boundary](docs/architecture/runtime-boundary.md) for the detailed
 ownership model.
+
+### One agent turn
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant App as Application
+    participant SDK as Host SDK
+    participant Rust as Rust kernel
+    participant LLM as Model provider
+    participant Tool as Typed tool
+
+    App->>SDK: agent.run(input)
+    SDK->>Rust: create run
+    Rust-->>SDK: model request
+    SDK->>LLM: typed provider request
+    LLM-->>SDK: response or tool calls
+    SDK->>Rust: model result
+    opt Model requested a tool
+        Rust-->>SDK: validated tool request
+        SDK->>Tool: typed arguments
+        Tool-->>SDK: typed result
+        SDK->>Rust: tool result
+        Rust-->>SDK: next model request
+        SDK->>LLM: transcript + tool result
+        LLM-->>SDK: terminal response
+        SDK->>Rust: model result
+    end
+    Rust-->>SDK: ordered events + validated output
+    SDK-->>App: AgentResult<T>
+```
 
 ## Implemented in `0.0.1`
 

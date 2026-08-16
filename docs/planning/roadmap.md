@@ -36,6 +36,31 @@ Orion's differentiators are:
 
 ## Competitive milestones
 
+```mermaid
+flowchart LR
+    V001["0.0.1<br/>Typed native pilot"]
+    V002["0.0.2<br/>Conformance + reliability"]
+    V003["0.0.3<br/>Durable execution"]
+    V004["0.0.4<br/>Production controls"]
+    V005["0.0.5<br/>Ecosystem + scale"]
+    V010["0.1.0<br/>Stability candidate"]
+
+    V001 --> V002 --> V003 --> V004 --> V005 --> V010
+
+    classDef shipped fill:#ecfdf5,stroke:#059669,color:#022c22,stroke-width:2px
+    classDef reliability fill:#eff6ff,stroke:#2563eb,color:#172554
+    classDef durability fill:#f5f3ff,stroke:#7c3aed,color:#2e1065
+    classDef operations fill:#fff7ed,stroke:#ea580c,color:#431407
+    classDef scale fill:#fdf2f8,stroke:#db2777,color:#500724
+    classDef stable fill:#fefce8,stroke:#ca8a04,color:#422006,stroke-width:2px
+    class V001 shipped
+    class V002 reliability
+    class V003 durability
+    class V004 operations
+    class V005 scale
+    class V010 stable
+```
+
 ### `0.0.2` — Conformance and reliability
 
 Outcome: contributors can change the runtime with fast evidence that every SDK

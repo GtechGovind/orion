@@ -1,10 +1,43 @@
-# Local SDK installation
+# SDK installation
 
-Orion packages are not published to PyPI, the npm registry, or Maven Central.
-Today, another project consumes Orion by building an SDK from a local checkout.
-The resulting Python wheel and npm platform package are platform-specific. The
-Kotlin JAR embeds the JNI library built for the host; coordinated release builds
-merge every supported JNI target into the same JAR.
+Orion `0.0.1` is published to PyPI, npm, and Maven Central. The coordinated
+release supports macOS arm64, Linux x86-64 glibc, and Windows x86-64. Every
+registry artifact is also attached to the
+[`v0.0.1` GitHub release](https://github.com/GtechGovind/orion/releases/tag/v0.0.1)
+with SHA-256 checksums.
+
+## Install from public registries
+
+Python 3.10 or newer:
+
+```bash
+python -m pip install orion-agent-sdk==0.0.1
+```
+
+Node.js 20.17 or newer:
+
+```bash
+npm install @orion-runtime/sdk@0.0.1
+```
+
+Kotlin/JVM 17:
+
+```kotlin
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("io.github.gtechgovind:orion-kotlin-sdk:0.0.1")
+}
+```
+
+The npm root package automatically selects its exact optional native package.
+The Maven artifact embeds every supported JNI library, so consumers do not set
+`java.library.path`. Maven Central mirrors can take a short time to synchronize
+after a new release is accepted.
+
+## Build from a local checkout
 
 The commands below use these example locations:
 
@@ -13,7 +46,7 @@ ORION_REPO=/absolute/path/to/orion
 APPLICATION=/absolute/path/to/application
 ```
 
-## Python
+### Python
 
 Python 3.10 or newer can install a locally built abi3 wheel. Maturin packages the
 PyO3 extension and `pip` installs the SDK's Pydantic dependency.
@@ -40,11 +73,10 @@ cd "$ORION_REPO/sdks/python"
 maturin develop --release
 ```
 
-## TypeScript and JavaScript
+### TypeScript and JavaScript
 
-Node.js 20.17 or newer can install the public root package together with the
-matching optional native package. Until the coordinated registry release is
-enabled, `package:local` creates both tarballs for the current machine:
+`package:local` creates the public root package and matching optional native
+package for testing unpublished changes on the current machine:
 
 ```bash
 cd "$ORION_REPO/sdks/javascript"
@@ -61,7 +93,7 @@ Replace `<platform>` with `darwin-arm64`, `linux-x64-gnu`, or
 `win32-x64-msvc`. Generate the pair on the target platform; do not copy a native
 tarball to a different operating system or architecture.
 
-## Kotlin/JVM
+### Kotlin/JVM
 
 The Kotlin SDK targets JVM 17. Its Maven artifact embeds the JNI library under
 `META-INF/orion/native/<os>/<arch>/`, extracts the matching resource securely,
@@ -72,8 +104,8 @@ cd "$ORION_REPO/sdks/kotlin"
 ./gradlew clean test publishToMavenLocal --no-daemon
 ```
 
-Add Maven Local and the locally published coordinate to the consuming Gradle
-project:
+Add Maven Local before Maven Central and use the locally published coordinate
+in the consuming Gradle project:
 
 ```kotlin
 repositories {
@@ -94,9 +126,8 @@ cd "$ORION_REPO/sdks/kotlin"
 ./gradlew -p consumer-smoke clean run --no-daemon
 ```
 
-The locally published artifact contains the current host native library. A
-public release is assembled and tested with the complete supported native
-matrix before upload.
+The locally published artifact contains the current host native library. Public
+releases are assembled and tested with the complete supported native matrix.
 
 ## Provider configuration and canonical API
 
@@ -143,5 +174,4 @@ if __name__ == "__main__":
 ```
 
 See the [complete cross-language examples](../../examples/README.md) and the
-[public API contract](../contracts/public-api.md). Public-registry installation
-commands will be documented only after release publishing is enabled.
+[public API contract](../contracts/public-api.md).

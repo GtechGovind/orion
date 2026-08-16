@@ -1,8 +1,30 @@
 # Orion Kotlin SDK
 
+[![Maven Central](https://img.shields.io/maven-central/v/io.github.gtechgovind/orion-kotlin-sdk?logo=apachemaven)](https://central.sonatype.com/artifact/io.github.gtechgovind/orion-kotlin-sdk)
+[![JVM](https://img.shields.io/badge/JVM-17%2B-7f52ff?logo=kotlin)](https://central.sonatype.com/artifact/io.github.gtechgovind/orion-kotlin-sdk/0.0.1)
+
 Kotlin/JVM SDK backed by an in-process JNI module. The supported API uses
 `@Serializable` types, named suspending function references, typed `Agent`
 results, and coroutine `Flow` streaming.
+
+## Published release
+
+```kotlin
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation("io.github.gtechgovind:orion-kotlin-sdk:0.0.1")
+}
+```
+
+The signed multi-platform JAR embeds JNI libraries for macOS arm64, Linux
+x86-64, and Windows x86-64. Central mirrors can take a short time to synchronize
+after publication. The
+[`v0.0.1` release](https://github.com/GtechGovind/orion/releases/tag/v0.0.1)
+also provides the runtime, sources, API documentation, POM, module metadata,
+and checksums.
 
 ```kotlin
 import dev.orion.sdk.Agent
