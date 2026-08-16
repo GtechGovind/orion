@@ -7,6 +7,8 @@ Versioning once compatibility policy is accepted.
 
 ## [Unreleased]
 
+## [0.0.1] - 2026-08-17
+
 ### Added
 
 - Versioned provider-neutral protocol and deterministic Rust kernel.

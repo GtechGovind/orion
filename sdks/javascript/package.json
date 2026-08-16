@@ -1,6 +1,6 @@
 {
   "name": "@orion-runtime/sdk",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "JavaScript and TypeScript SDK for the Orion Rust agent runtime pilot",
   "author": {
     "name": "Govind Yadav",

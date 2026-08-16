@@ -26,7 +26,7 @@ cd "$APPLICATION"
 python3.10 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-python -m pip install "$ORION_REPO"/sdks/python/dist/local/orion_agent_sdk-0.1.0-*.whl
+python -m pip install "$ORION_REPO"/sdks/python/dist/local/orion_agent_sdk-0.0.1-*.whl
 ```
 
 For development against the checkout instead of a wheel, activate the target
@@ -53,8 +53,8 @@ npm run package:local
 
 cd "$APPLICATION"
 npm install \
-  "$ORION_REPO/sdks/javascript/local-packages/orion-runtime-sdk-<platform>-0.1.0.tgz" \
-  "$ORION_REPO/sdks/javascript/local-packages/orion-runtime-sdk-0.1.0.tgz"
+  "$ORION_REPO/sdks/javascript/local-packages/orion-runtime-sdk-<platform>-0.0.1.tgz" \
+  "$ORION_REPO/sdks/javascript/local-packages/orion-runtime-sdk-0.0.1.tgz"
 ```
 
 Replace `<platform>` with `darwin-arm64`, `linux-x64-gnu`, or
@@ -82,7 +82,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.orion.runtime:orion-kotlin-sdk:0.1.0")
+    implementation("dev.orion.runtime:orion-kotlin-sdk:0.0.1")
 }
 ```
 

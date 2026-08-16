@@ -4,7 +4,7 @@ Orion is an open-source, cross-language runtime pilot for reliable LLM agents.
 One Rust state machine owns execution semantics while Python, Kotlin, and
 JavaScript/TypeScript SDKs own provider clients and application tools.
 
-Version `0.1.0` is a working pilot with model/tool loops, ordered lifecycle
+Version `0.0.1` is a working pilot with model/tool loops, ordered lifecycle
 events, normalized usage, structured-output declarations, and OpenAI-compatible
 model endpoints.
 

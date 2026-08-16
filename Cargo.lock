@@ -731,11 +731,11 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
 name = "orion-checkpoint"
-version = "0.1.0"
+version = "0.0.1"
 
 [[package]]
 name = "orion-ffi"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "orion-kernel",
  "orion-protocol",
@@ -746,7 +746,7 @@ dependencies = [
 
 [[package]]
 name = "orion-javascript"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "napi",
  "napi-build",
@@ -758,7 +758,7 @@ dependencies = [
 
 [[package]]
 name = "orion-kernel"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "jsonschema",
  "orion-protocol",
@@ -769,7 +769,7 @@ dependencies = [
 
 [[package]]
 name = "orion-kotlin"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "jni",
  "orion-ffi",
@@ -780,11 +780,11 @@ dependencies = [
 
 [[package]]
 name = "orion-policy"
-version = "0.1.0"
+version = "0.0.1"
 
 [[package]]
 name = "orion-protocol"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "serde",
  "serde_json",
@@ -792,7 +792,7 @@ dependencies = [
 
 [[package]]
 name = "orion-python"
-version = "0.1.0"
+version = "0.0.1"
 dependencies = [
  "orion-ffi",
  "orion-protocol",
@@ -802,7 +802,7 @@ dependencies = [
 
 [[package]]
 name = "orion-testing"
-version = "0.1.0"
+version = "0.0.1"
 
 [[package]]
 name = "outref"
