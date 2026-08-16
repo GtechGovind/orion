@@ -250,6 +250,7 @@ jobs:
 
   publish-pypi:
     name: Publish PyPI distributions
+    if: ${{ vars.PUBLISH_PYPI == 'true' }}
     needs: [authorize, assemble]
     runs-on: ubuntu-latest
     environment: pypi
@@ -267,6 +268,7 @@ jobs:
 
   publish-npm:
     name: Publish npm distributions
+    if: ${{ vars.PUBLISH_NPM == 'true' }}
     needs: [authorize, assemble]
     runs-on: ubuntu-latest
     environment: npm
@@ -293,6 +295,7 @@ jobs:
 
   publish-maven-central:
     name: Publish Maven Central deployment
+    if: ${{ vars.PUBLISH_MAVEN_CENTRAL == 'true' }}
     needs: [authorize, assemble]
     runs-on: ubuntu-latest
     environment: maven-central
@@ -327,6 +330,15 @@ jobs:
   github-release:
     name: Publish checksummed GitHub release
     needs: [authorize, assemble, publish-pypi, publish-npm, publish-maven-central]
+    if: >-
+      ${{
+        always() &&
+        needs.authorize.result == 'success' &&
+        needs.assemble.result == 'success' &&
+        (needs.publish-pypi.result == 'success' || needs.publish-pypi.result == 'skipped') &&
+        (needs.publish-npm.result == 'success' || needs.publish-npm.result == 'skipped') &&
+        (needs.publish-maven-central.result == 'success' || needs.publish-maven-central.result == 'skipped')
+      }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

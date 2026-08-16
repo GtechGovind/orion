@@ -17,6 +17,21 @@ These coordinates are not public until their registry pages and ownership are
 verified. A name returning “not found” is not proof that the maintainer owns the
 name or namespace.
 
+The tag workflow always builds, verifies, and attaches the complete package set
+and checksums to its GitHub release. Public registry jobs are disabled by
+default. Enable each one only after its setup below is complete by setting the
+corresponding repository variable to the exact value `true`:
+
+| Repository variable | Enables |
+|---|---|
+| `PUBLISH_PYPI` | PyPI trusted publication |
+| `PUBLISH_NPM` | npm trusted publication |
+| `PUBLISH_MAVEN_CENTRAL` | signed Maven Central publication |
+
+A GitHub release with registry jobs disabled is a usable native artifact
+release, but it is not a registry-complete release. Never enable a variable to
+probe ownership or credentials during a production tag run.
+
 ## One-time registry setup
 
 ### PyPI

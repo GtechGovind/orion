@@ -42,6 +42,8 @@ Versioning once compatibility policy is accepted.
 - Coordinated tag-only release automation that builds the supported native
   matrix, verifies clean external consumers, publishes through protected
   registry environments, records checksums, and creates a GitHub release.
+- Explicit registry publication switches so early releases can ship verified,
+  checksummed GitHub artifacts before public registry ownership is configured.
 ### Changed
 
 - Redesigned the project README around the first-run experience, implemented
