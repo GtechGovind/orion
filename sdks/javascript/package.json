@@ -1,12 +1,17 @@
 {
   "name": "@orion-runtime/sdk",
-  "version": "0.0.0",
-  "description": "Reserved JavaScript/TypeScript SDK scaffold for Orion",
+  "version": "0.1.0",
+  "description": "JavaScript and TypeScript SDK for the Orion Rust agent runtime pilot",
   "private": true,
+  "author": {
+    "name": "Govind Yadav",
+    "email": "gtech.govind2000@gmail.com"
+  },
   "license": "MIT OR Apache-2.0",
   "type": "module",
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "exports": {
     ".": {
@@ -14,16 +19,38 @@
       "import": "./dist/index.js"
     }
   },
+  "types": "./dist/index.d.ts",
   "scripts": {
+    "build": "npm run build:native && npm run build:typescript",
+    "build:native": "napi build --release --platform --manifest-path ../../bindings/javascript/Cargo.toml --output-dir dist --js native.cjs --dts native.d.ts",
+    "build:typescript": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
     "check:package": "npm pack --dry-run",
-    "test": "node --test"
+    "test": "npm run build && node --experimental-strip-types --test test/*.test.ts",
+    "prepack": "npm run build"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/orion-runtime/orion.git",
+    "url": "https://github.com/GtechGovind/orion.git",
     "directory": "sdks/javascript"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.4.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  },
+  "napi": {
+    "binaryName": "orion_native",
+    "targets": [
+      "aarch64-apple-darwin",
+      "x86_64-apple-darwin",
+      "x86_64-unknown-linux-gnu",
+      "aarch64-unknown-linux-gnu",
+      "x86_64-pc-windows-msvc",
+      "aarch64-pc-windows-msvc"
+    ]
   }
 }

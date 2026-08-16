@@ -1,15 +1,9 @@
 # Examples
 
-Examples will be introduced with the first SDK implementation. Each core example
-should have equivalent Python, JavaScript/TypeScript, and Kotlin variants where
-the target ecosystem supports the same capability.
+`weather.py`, `weather.ts`, and `Weather.kt` show the equivalent public contract
+in every SDK. They use the included OpenAI-compatible adapter and one typed
+weather tool. Build/install the corresponding native SDK package, set
+`OPENAI_API_KEY`, and run the example in that SDK environment.
 
-Planned groups:
-
-- minimal agent
-- typed tool and structured output
-- streaming
-- cancellation
-- checkpoint and resume
-- approval suspension
-- agent-as-tool and handoff
+The SDK test suites use deterministic fake adapters and require no network or
+credentials.

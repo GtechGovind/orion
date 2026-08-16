@@ -8,23 +8,26 @@ permissions:
 
 jobs:
   blocked-release-check:
-    name: Confirm publishing remains disabled
+    name: Confirm v0.1 publishing remains disabled
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Verify M0 packages cannot publish
+      - name: Verify v0.1 pilot packages cannot publish
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          manifests = list(Path("crates").glob("*/Cargo.toml"))
+          manifests = [
+              *Path("crates").glob("*/Cargo.toml"),
+              *Path("bindings").glob("*/Cargo.toml"),
+          ]
           missing = [str(path) for path in manifests if "publish = false" not in path.read_text()]
           if missing:
               raise SystemExit(f"Publishing is not disabled in: {missing}")
 
           package = Path("sdks/javascript/package.json").read_text()
           if '"private": true' not in package:
-              raise SystemExit("JavaScript package must remain private during M0")
+              raise SystemExit("JavaScript package must remain private during the v0.1 pilot")
           PY
       - name: Explain status
-        run: echo "Release publishing is intentionally disabled during M0."
+        run: echo "Release publishing is intentionally disabled during the v0.1 pilot."

@@ -1,27 +1,29 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["maturin>=1.9,<2"]
+build-backend = "maturin"
 
 [project]
 name = "orion-agent-sdk"
-version = "0.0.0"
-description = "Reserved Python SDK scaffold for the Orion agent runtime"
+version = "0.1.0"
+description = "Python SDK for the Orion Rust agent runtime pilot"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT OR Apache-2.0" }
-authors = [{ name = "Orion contributors" }]
+authors = [{ name = "Govind Yadav", email = "gtech.govind2000@gmail.com" }]
 classifiers = [
-  "Development Status :: 1 - Planning",
+  "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
   "Typing :: Typed",
 ]
 dependencies = []
 
 [project.urls]
-Repository = "https://github.com/orion-runtime/orion"
+Repository = "https://github.com/GtechGovind/orion"
 
-[tool.hatch.build.targets.wheel]
-packages = ["src/orion_sdk"]
+[tool.maturin]
+manifest-path = "../../bindings/python/Cargo.toml"
+module-name = "orion_sdk._native"
+python-source = "src"
 
 [tool.ruff]
 line-length = 100
@@ -29,4 +31,5 @@ target-version = "py310"
 
 [tool.pyright]
 include = ["src", "tests"]
+pythonVersion = "3.10"
 strict = ["src"]

@@ -1,0 +1,27 @@
+[package]
+name = "orion-python"
+description = "PyO3 native module for the Orion runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+name = "orion_python"
+crate-type = ["cdylib"]
+
+[dependencies]
+orion-ffi = { path = "../../crates/orion-ffi" }
+orion-protocol = { path = "../../crates/orion-protocol" }
+pyo3 = { version = "0.29", features = ["abi3-py310", "extension-module"] }
+pythonize = "0.29"
+
+[lints.rust]
+unsafe_code = "allow"
+missing_docs = "warn"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"

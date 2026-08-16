@@ -11,7 +11,9 @@ Each scenario will define:
 - expected terminal or suspended outcome
 - permitted language-specific differences
 
-Planned initial scenarios are:
+The executable SDK tests currently cover direct completion and a tool call
+followed by completion through the Rust native session. `scenarios/tool-loop.json`
+records the common expected trace. Future scenarios are:
 
 1. Direct completion
 2. Tool call followed by completion
@@ -23,7 +25,3 @@ Planned initial scenarios are:
 8. Cancellation during tool effects
 9. Crash before action receipt
 10. Crash after action receipt and before checkpoint advance
-
-No scenarios are executable during M0. The `scenarios/` directory should be
-created when the first machine-readable fixtures are added; it does not need a
-placeholder README.
