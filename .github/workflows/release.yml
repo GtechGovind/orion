@@ -286,6 +286,8 @@ jobs:
           name: release-packages-${{ github.ref_name }}-${{ github.sha }}
           path: release-dist
       - name: Publish platform packages before root
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         shell: bash
         run: |
           for package in release-dist/npm/*-darwin-arm64-*.tgz release-dist/npm/*-linux-x64-gnu-*.tgz release-dist/npm/*-win32-x64-msvc-*.tgz; do

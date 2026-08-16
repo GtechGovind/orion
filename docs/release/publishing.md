@@ -44,10 +44,11 @@ repository. PyPI documents this flow in
 
 ### npm
 
-Confirm ownership of the `orion-runtime` scope and bootstrap the root package
-before configuring trusted publishing. Authorize `GtechGovind/orion`, workflow
-`release.yml`, environment `npm`, for `npm publish`. The controlled release job
-must publish every napi-rs target package before the root package. npm trusted
+Confirm ownership of the `orion-runtime` scope. The protected `npm` environment
+provides `NPM_TOKEN` for the first automated publication. After the packages
+exist, authorize `GtechGovind/orion`, workflow `release.yml`, environment `npm`,
+for trusted publishing and retire the bootstrap token. The controlled release
+job publishes every napi-rs target package before the root package. npm trusted
 publishing currently requires Node.js 22.14 or newer, npm 11.5.1 or newer, and
 `id-token: write`; see [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
 and the [napi-rs native release model](https://napi.rs/docs/deep-dive/release).
