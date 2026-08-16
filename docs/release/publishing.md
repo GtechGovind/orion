@@ -45,13 +45,17 @@ repository. PyPI documents this flow in
 ### npm
 
 Confirm ownership of the `orion-runtime` scope. The protected `npm` environment
-provides `NPM_TOKEN` for the first automated publication. After the packages
-exist, authorize `GtechGovind/orion`, workflow `release.yml`, environment `npm`,
-for trusted publishing and retire the bootstrap token. The controlled release
-job publishes every napi-rs target package before the root package. npm trusted
-publishing currently requires Node.js 22.14 or newer, npm 11.5.1 or newer, and
-`id-token: write`; see [npm trusted publishing](https://docs.npmjs.com/trusted-publishers/)
-and the [napi-rs native release model](https://napi.rs/docs/deep-dive/release).
+provides a granular `NPM_TOKEN` with organization package read/write access and
+the **bypass two-factor authentication** option for the first automated
+publication. A classic token or granular token without that option will be
+rejected even when the account itself does not require two-factor
+authentication. After the packages exist, authorize `GtechGovind/orion`,
+workflow `release.yml`, environment `npm`, for trusted publishing and retire
+the bootstrap token. The controlled release job publishes every napi-rs target
+package before the root package. npm trusted publishing currently requires
+Node.js 22.14 or newer, npm 11.5.1 or newer, and `id-token: write`; see
+[npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) and the
+[napi-rs native release model](https://napi.rs/docs/deep-dive/release).
 
 ### Maven Central
 
@@ -90,6 +94,13 @@ version; never rebuild different bytes under a partially published version.
 Publish missing target packages first, publish the root package last, and
 deprecate a broken npm root version if its complete native target set cannot be
 restored.
+
+For an interrupted coordinated release, dispatch `release-recovery.yml` from
+the protected `main` branch with the original production workflow run ID, tag,
+and full commit SHA. Disable an ecosystem input only after confirming that its
+registry publication is complete. The recovery workflow intentionally cannot
+republish PyPI because Python versions are immutable and PyPI trusted
+publication is already independently retryable.
 
 Repository and environment secrets must never appear in Gradle properties,
 `.npmrc`, `.pypirc`, workflow logs, package archives, or example configuration.
