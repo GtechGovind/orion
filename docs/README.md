@@ -13,7 +13,13 @@ subdirectories.
 
 ## Contracts
 
+- [Public API contract](contracts/public-api.md) — shared concepts and behavior
 - [Host SDK contract](contracts/host-sdk.md) — common semantics expressed idiomatically per language
+
+## Guides
+
+- [Pilot guide](guides/pilot.md) — build, test, and supported boundary
+- [LLM connectivity](guides/llm-connectivity.md) — adapters, credentials, and endpoints
 
 ## Decisions
 

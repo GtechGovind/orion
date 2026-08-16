@@ -10,5 +10,11 @@ homepage.workspace = true
 authors.workspace = true
 publish = false
 
+[dependencies]
+orion-protocol = { path = "../orion-protocol" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
 [lints]
 workspace = true

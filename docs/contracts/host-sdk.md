@@ -1,6 +1,6 @@
 # Host SDK contract
 
-Each public SDK should express the same runtime semantics through idiomatic
+Each public SDK expresses the same runtime semantics through idiomatic
 language constructs.
 
 ## Common concepts
@@ -8,8 +8,8 @@ language constructs.
 - Agent definition
 - Runner facade
 - Tool definition
-- Run context
-- Run result or suspended run
+- Model reference, registry, and adapter
+- Run result
 - Typed lifecycle events
 
 ## Language-specific expression
@@ -29,5 +29,8 @@ Every SDK must execute shared scenarios and prove:
 - equivalent terminal outcomes
 - equivalent semantic event order
 - consistent error categories
-- correct cancellation and suspension mapping
-- checkpoint round-trip compatibility
+- correct cancellation mapping
+- direct native DTO compatibility at the Rust bridge
+
+Suspension and durable checkpoint conformance are not part of `0.1`. See the
+[public API](public-api.md) and [pilot guide](../guides/pilot.md).

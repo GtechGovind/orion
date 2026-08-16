@@ -1,6 +1,6 @@
 # Release process
 
-Publishing is disabled during M0.
+Publishing remains disabled while the `0.1` pilot is release-gated.
 
 The future release process should:
 

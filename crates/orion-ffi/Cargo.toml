@@ -13,5 +13,9 @@ publish = false
 [lints]
 workspace = true
 
-[lib]
-crate-type = ["rlib"]
+[dependencies]
+orion-kernel = { path = "../orion-kernel" }
+orion-protocol = { path = "../orion-protocol" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true

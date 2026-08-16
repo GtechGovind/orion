@@ -2,7 +2,7 @@
 
 ## Objective
 
-Orion aims to provide one reliable execution model across multiple host
+Orion provides one reliable execution model across multiple host
 languages without making those languages share one unnatural public API.
 
 ## Layers
@@ -11,7 +11,7 @@ languages without making those languages share one unnatural public API.
 Application
   -> Idiomatic host SDK
       -> Model, tool, storage, and framework adapters
-          -> Versioned command/effect bridge
+          -> In-process PyO3 / Node-API / JNI binding
               -> Rust semantic kernel
 ```
 
@@ -19,17 +19,18 @@ The Rust kernel is a deterministic state machine. It consumes commands and
 effect results, updates run state, emits ordered events, and returns either the
 next effect or a terminal outcome.
 
-The host SDK owns asynchronous I/O. This prevents Rust from directly invoking
+The binding owns an opaque Rust session and converts language DTOs directly to
+protocol values. The host SDK owns asynchronous I/O. This prevents Rust from directly invoking
 arbitrary Python callbacks, JavaScript functions, or Kotlin lambdas across
 foreign runtime boundaries.
 
-## Proposed kernel states
+## Runtime states
 
 `CREATED`, `PREPARING`, `MODEL_CALL`, `RESOLVING`, `EXECUTING_ACTIONS`,
 `CHECKPOINTING`, `NEXT_TURN`, `SUSPENDED`, `HANDOFF`, and terminal states.
 
-The state names and transitions are proposals until the protocol ADR and
-state-machine specification are accepted.
+The v0.1 implementation exposes running, completed, failed, and cancelled
+states. Finer-grained states remain design targets for durability work.
 
 ## Invariants
 

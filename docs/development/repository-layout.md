@@ -1,374 +1,170 @@
 # Repository layout and file guide
 
-This guide explains the purpose of every source-controlled directory and file in
-the Orion repository. For the research and design background that informed the
-repository scaffold, see the [Agentic Framework Research & Design reference](https://docs.google.com/document/d/1gobjUbbcnHgkUu1dir_0s5q0fBqtME0w0ASAl1mfOro/edit?tab=t.0#heading=h.vzfb1jxxgmqu).
+This guide describes the source-controlled Orion repository as it exists in
+`0.1.0`. The external [Agentic Framework Research & Design document](https://docs.google.com/document/d/1gobjUbbcnHgkUu1dir_0s5q0fBqtME0w0ASAl1mfOro/edit?tab=t.0#heading=h.vzfb1jxxgmqu)
+is background only; it is not a specification Orion is compared against.
 
-## Current status
-
-Orion is at **M0: architecture scaffold**. The repository defines ownership
-boundaries, package metadata, documentation, policies, and validation workflows,
-but it does not yet implement an agent runtime. Most Rust modules and public SDK
-entry points are intentionally placeholders. Package versions are `0.0.0`, Rust
-crates cannot be published, and the JavaScript package is private.
-
-## High-level structure
+## Execution path
 
 ```text
-orion/
-├── .github/                 GitHub issue, pull-request, CI, and dependency automation
-├── bindings/                Low-level native bridges used internally by host SDKs
-├── conformance/             Language-neutral behavioral scenarios and expected traces
-├── crates/                  Rust protocol, kernel, policy, persistence, FFI, and tests
-├── docs/                    Indexed architecture, contracts, decisions, and project guidance
-├── examples/                Future equivalent examples for every supported SDK
-├── schemas/                 Future canonical protocol and persistence schemas
-├── sdks/                    Public Python, JavaScript/TypeScript, and Kotlin SDKs
-└── root project files       Workspace configuration, policies, roadmap, and licenses
+Application
+  → public SDK (Python, JavaScript/TypeScript, or Kotlin)
+  → in-process native binding (PyO3, Node-API, or JNI)
+  → Rust-owned RunSession
+  → deterministic kernel
+  → effect returned to the SDK
+  → SDK executes model/tool I/O and resumes the same native session
 ```
 
-## How the main parts work together
-
-The intended execution path is:
-
-1. An application uses an idiomatic API from `sdks/python`, `sdks/javascript`,
-   or `sdks/kotlin`.
-2. The SDK performs host-language work such as asynchronous I/O, model requests,
-   tool execution, storage access, authentication, and framework integration.
-3. The SDK's internal package in `bindings/<language>` transports owned,
-   versioned messages through `orion-ffi`.
-4. `orion-protocol` defines commands sent into the runtime, effects requested
-   from the host, results returned to the runtime, ordered events, identifiers,
-   errors, and version metadata.
-5. `orion-kernel` applies deterministic lifecycle transitions. It requests an
-   effect instead of directly calling Python, JavaScript, Kotlin, provider, or
-   user code.
-6. `orion-policy` decides whether actions are allowed and how approval, retry,
-   timeout, concurrency, and side-effect rules apply.
-7. `orion-checkpoint` records durable run state and completed-action receipts so
-   a resumed run does not blindly repeat an external side effect.
-8. `orion-testing`, `conformance`, and SDK-specific tests verify that every host
-   language observes equivalent behavior.
-
-The Cargo manifests do not declare these inter-crate dependencies yet. The flow
-above describes the intended ownership model for later milestones.
+Mutable run state stays inside Rust. Native boundaries receive ordinary
+language DTOs. Dynamic schemas, tool values, provider options, and provider
+state remain JSON-compatible because that is part of their public contract;
+whole kernel transitions are not transported as JSON strings.
 
 ## Root files
 
-- `.editorconfig` — Shared editor rules: UTF-8, LF line endings, final newlines,
-  trailing-whitespace cleanup, and language-specific indentation.
-- `.gitignore` — Excludes Rust build output, dependency folders, Python caches,
-  Gradle/IDE state, local environments, secrets, and operating-system files.
-- `Cargo.toml` — Root Rust workspace manifest. Registers all six crates and
-  centralizes version, edition, minimum Rust version, license, repository
-  metadata, and lint policy.
-- `rust-toolchain.toml` — Pins Rust `1.85.0` with `rustfmt` and `clippy` so local
-  development and CI use the same toolchain.
-- `README.md` — Project landing page: purpose, design direction, public
-  vocabulary, repository map, current status, contribution entry point, and
-  license summary.
-- `CHANGELOG.md` — User-facing history of notable changes. It currently records
-  the initial scaffold under `Unreleased`.
-- `LICENSE-APACHE` — Apache License 2.0 option for dual-licensed use.
-- `LICENSE-MIT` — MIT License option for dual-licensed use.
-- `NOTICE` — Project copyright and attribution notice.
+- `README.md` — Project entry point, architecture summary, build commands,
+  maintainer, contribution links, and licensing.
+- `Cargo.toml` — Rust workspace members, shared package metadata, Rust `1.88`
+  floor, dependency versions, and lint policy.
+- `Cargo.lock` — Reproducible Rust dependency resolution for the workspace and
+  native modules.
+- `rust-toolchain.toml` — Pins Rust, rustfmt, and Clippy.
+- `.editorconfig` — Common encoding, newline, whitespace, and indentation
+  rules.
+- `.gitignore` — Excludes build output, dependency trees, caches, IDE state,
+  secrets, and local environments.
+- `CHANGELOG.md` — User-visible release history.
+- `LICENSE-APACHE`, `LICENSE-MIT`, and `NOTICE` — Dual-license terms and
+  attribution.
 
-## `.github/`: repository automation and contribution forms
+## `.github/`
 
-### Issue and pull-request templates
+- `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, and `SUPPORT.md` —
+  Community workflow, conduct, private vulnerability reporting, and support
+  routing.
+- `PULL_REQUEST_TEMPLATE.md` — Required change rationale and verification.
+- `ISSUE_TEMPLATE/` — Structured bug and feature forms plus issue routing.
+- `workflows/ci.yml` — Blocking Rust and SDK build/test/package checks.
+- `workflows/release-preflight.yml` — Manual check that public publishing stays
+  disabled until a release decision.
+- `dependabot.yml` — Dependency update schedule for every ecosystem.
 
-- `.github/ISSUE_TEMPLATE/bug_report.yml` — Structured bug form requesting a
-  description, reproduction, version/commit, and affected subsystem.
-- `.github/ISSUE_TEMPLATE/feature_request.yml` — Design/feature proposal form
-  centered on the problem, evidence, competing approaches, and validation.
-- `.github/ISSUE_TEMPLATE/config.yml` — Disables blank issues and routes security
-  reports to private advisories.
-- `.github/PULL_REQUEST_TEMPLATE.md` — Requires the problem, approach, runtime
-  and compatibility impact, validation, ADR link/rationale, and checklist.
+## `crates/`: reusable Rust runtime
 
-### Community health files
+### `orion-protocol`
 
-- `.github/CONTRIBUTING.md` — Contribution workflow, development checks, design
-  rules, pull-request expectations, and ADR requirements.
-- `.github/CODE_OF_CONDUCT.md` — Expected community behavior, unacceptable
-  behavior, and maintainer enforcement responsibilities.
-- `.github/SECURITY.md` — Supported-version status, private vulnerability
-  reporting, and security principles.
-- `.github/SUPPORT.md` — Routes architecture questions, bug reports, and
-  security reports.
+- `commands.rs` — `StartRun`, agent, model, tool, and settings definitions.
+- `effects.rs` — Messages, model requests, tool calls, capabilities, and host
+  effects.
+- `results.rs` — Model/tool effect results, usage, finish reasons, and terminal
+  results.
+- `events.rs` — Ordered lifecycle event variants and envelopes.
+- `errors.rs` — Stable cross-language error codes and retry metadata.
+- `identifiers.rs` — Run and action identifiers.
+- `versioning.rs` — Protocol version and compatibility check.
+- `lib.rs` — Public module/re-export boundary.
 
-GitHub discovers these files automatically from `.github/`, so they do not need
-to occupy the repository root.
+### `orion-kernel`
 
-### Automation
+- `machine.rs` — Deterministic transition engine, command/checkpoint validation,
+  effect matching, tool validation, finish-reason handling, limits, events, and
+  unit tests.
+- `state.rs` — Serializable internal run state and lifecycle status.
+- `lib.rs` — Public kernel and state exports.
 
-- `.github/dependabot.yml` — Schedules monthly dependency checks for Cargo, npm,
-  Python, Gradle, and GitHub Actions.
-- `.github/workflows/ci.yml` — Runs formatting, linting, and tests for the Rust
-  workspace; compiles the Python package; dry-runs JavaScript packaging; and
-  verifies required repository-policy files.
-- `.github/workflows/release-preflight.yml` — Manually verifies that publishing
-  remains disabled during M0. It does not publish any artifact.
+### `orion-ffi`
 
-## `crates/`: Rust semantic core
-
-Every crate has a private `Cargo.toml` that inherits workspace metadata and lint
-rules. The source files currently reserve module ownership; they contain no
-runtime behavior.
-
-### `crates/orion-protocol/`: language-neutral runtime contract
-
-- `Cargo.toml` — Declares the private `orion-protocol` crate.
-- `src/lib.rs` — Crate entry point and module export list.
-- `src/commands.rs` — Commands a host SDK will submit, such as create, step,
-  resume, cancel, or inspect.
-- `src/effects.rs` — Operations the kernel will ask the host to perform, such as
-  model calls, tools, approvals, external input, or persistence.
-- `src/results.rs` — Normalized effect results and terminal run outcomes.
-- `src/events.rs` — Immutable, ordered lifecycle event envelopes used by
-  streaming, tracing, debugging, persistence hooks, and evaluation.
-- `src/identifiers.rs` — Stable identities for runs, sessions, turns, actions,
-  checkpoints, and operations.
-- `src/errors.rs` — Versioned error categories that can be mapped consistently
-  into every host language.
-- `src/versioning.rs` — Protocol/schema version and compatibility metadata.
-
-### `crates/orion-kernel/`: deterministic execution lifecycle
-
-- `Cargo.toml` — Declares the private `orion-kernel` crate.
-- `src/lib.rs` — Kernel entry point and module exports.
-- `src/machine.rs` — State-machine advancement and enforcement of lifecycle
-  invariants.
-- `src/state.rs` — Boundary between serializable durable state and temporary
-  in-memory run state.
-- `src/transitions.rs` — Ownership of continue, complete, handoff, and suspend
-  transitions.
-- `src/turn.rs` — Lifecycle of one logical model turn.
-- `src/budgets.rs` — Run, turn, token, cost, and deadline budget ownership.
-- `src/cancellation.rs` — Cancellation propagation, cleanup, and terminal
-  semantics distinct from ordinary failure.
-
-### `crates/orion-checkpoint/`: durability and replay safety
-
-- `Cargo.toml` — Declares the private `orion-checkpoint` crate.
-- `src/lib.rs` — Checkpoint crate entry point and module exports.
-- `src/envelope.rs` — Versioned checkpoint envelope containing the execution
-  cursor and durable state.
-- `src/ledger.rs` — Completed-action identities and receipts used to prevent
-  unsafe duplicate side effects after recovery.
-- `src/migration.rs` — Compatibility checks and migrations between durable
-  format versions.
-- `src/store.rs` — Protocol that host-provided checkpoint stores must implement.
-
-### `crates/orion-policy/`: execution rules
-
-- `Cargo.toml` — Declares the private `orion-policy` crate.
-- `src/lib.rs` — Policy crate entry point and module exports.
-- `src/approval.rs` — Human and automated approval rules.
-- `src/concurrency.rs` — Structured concurrency, action dependencies, and safe
-  parallel execution policy.
-- `src/retry.rs` — Separate retry scopes for transport, model turn, tool, and
-  workflow failures.
-- `src/side_effects.rs` — Side-effect classification and idempotency
-  requirements.
-- `src/timeout.rs` — Run-level, model-call, and tool timeout rules.
-
-### `crates/orion-ffi/`: native ABI boundary
-
-- `Cargo.toml` — Declares the private `orion-ffi` library. It currently builds
-  only as an `rlib`; exported dynamic-library symbols will wait for an ADR.
-- `src/lib.rs` — FFI entry point and module exports.
-- `src/handles.rs` — Opaque handles visible to host languages without exposing
-  Rust object layouts.
-- `src/memory.rs` — Allocation, ownership, and release conventions across the
-  native boundary.
-- `src/transport.rs` — Versioned command and response transport used by native
+- `session.rs` — Safe Rust `RunSession` wrapper. It owns a kernel, exposes
+  start/resume/cancel/fail, and retains each unread step for thin native
   bindings.
+- `lib.rs` — Native-session module export.
 
-### `crates/orion-testing/`: deterministic test support
+### Reserved crates
 
-- `Cargo.toml` — Declares the private `orion-testing` crate.
-- `src/lib.rs` — Testing crate entry point and module exports.
-- `src/fake_model.rs` — Scripted, provider-neutral model behavior for tests
-  without network access or API keys.
-- `src/fake_tool.rs` — Scripted tools, results, side effects, and receipts.
-- `src/event_recorder.rs` — Captures and compares ordered event traces.
-- `src/scenario.rs` — Loads and executes language-neutral conformance scenarios.
+- `orion-checkpoint` — Future durable checkpoint stores and migration logic.
+- `orion-policy` — Future retry, approval, timeout, and side-effect policy.
+- `orion-testing` — Future reusable fake models/tools and scenario runner.
 
-## `sdks/`: public host-language APIs
+These crates contain explicit Rust package/module boundaries, not empty
+directories. They must not be described as implemented features.
 
-The SDKs will expose idiomatic APIs while hiding generated/native binding
-details. Equivalent runtime behavior does not require identical syntax across
-languages.
+## `bindings/`: private native modules
 
-### `sdks/python/`
+- `python/Cargo.toml` and `python/src/lib.rs` — PyO3 abi3 module exposing an
+  opaque `NativeRun`. `pythonize` maps Python dict/list/scalars directly to
+  Serde protocol values without JSON strings.
+- `javascript/Cargo.toml`, `javascript/build.rs`, and
+  `javascript/src/lib.rs` — N-API addon exposing an opaque `NativeRun` and
+  direct JavaScript object conversion.
+- `kotlin/Cargo.toml` and `kotlin/src/lib.rs` — JNI shared library. A guarded
+  handle registry owns `RunSession` values; recursive Map/List/scalar conversion
+  maps JVM DTOs directly to Rust values. JNI exports catch panics and translate
+  failures to `OrionException`.
 
-- `README.md` — Python SDK status and intended responsibility.
-- `pyproject.toml` — Hatch build configuration, package metadata, Python
-  `>=3.10`, wheel source path, Ruff settings, and strict Pyright scope.
-- `src/orion_sdk/__init__.py` — Future public Python package entry point.
-- `src/orion_sdk/py.typed` — PEP 561 marker telling type checkers the package
-  ships inline typing information.
+Bindings are internal implementation details. Public application ergonomics
+belong only in `sdks/`.
 
-Python tests will live in `sdks/python/tests/` when executable behavior exists.
-They must consume the shared conformance scenarios.
+## `sdks/`: public host APIs
 
-### `sdks/javascript/`
+### Python
 
-- `README.md` — JavaScript/TypeScript SDK status and intended responsibility.
-- `package.json` — Private ESM package metadata, Node `>=20`, future `dist`
-  exports, dry-run packaging check, and test command.
-- `src/index.ts` — Future public package entry point; intentionally exports
-  nothing during M0.
+- `pyproject.toml` — Maturin mixed-project build, package metadata, abi3 native
+  module path, Ruff, and strict Pyright configuration.
+- `src/orion_sdk/models.py` — Public models, tools, adapter protocol, registry,
+  and OpenAI-compatible adapter.
+- `src/orion_sdk/runner.py` — Async effect loop over a PyO3 `NativeRun`.
+- `src/orion_sdk/_native.pyi` and `py.typed` — Native-module type surface and
+  PEP 561 marker.
+- `src/orion_sdk/__init__.py` — Stable package exports.
+- `tests/test_runner.py` — Deterministic native tool-loop smoke test.
 
-JavaScript tests will live in `sdks/javascript/tests/` when executable behavior
-exists. The plural directory name keeps SDK test layout consistent.
+### JavaScript/TypeScript
 
-### `sdks/kotlin/`
+- `package.json` and `package-lock.json` — Private release-gated npm package,
+  N-API targets, exact dependency resolution, build/test/package scripts, and
+  developer metadata.
+- `tsconfig.json` — Strict ESM compilation and declaration output.
+- `src/index.ts` — Public types, models, runner, adapters, and native addon
+  loading.
+- `test/runner.test.ts` — Deterministic native tool-loop smoke test.
 
-- `README.md` — Kotlin SDK status and intended responsibility.
-- `settings.gradle.kts` — Sets the Gradle root-project name.
-- `build.gradle.kts` — Applies Kotlin/JVM `2.1.20`, targets Java 17, uses Maven
-  Central, assigns version `0.0.0`, and enables JUnit Platform.
-- `gradlew` — Unix/macOS Gradle wrapper launcher.
-- `gradlew.bat` — Windows Gradle wrapper launcher.
-- `gradle/wrapper/gradle-wrapper.properties` — Pins the Gradle distribution and
-  wrapper download/cache behavior.
-- `gradle/wrapper/gradle-wrapper.jar` — Binary bootstrap used by both wrapper
-  launchers.
-- `src/main/kotlin/dev/orion/sdk/Orion.kt` — Future public Kotlin namespace and
-  SDK entry point.
+### Kotlin/JVM
 
-Kotlin tests will use the conventional `src/test/kotlin/` tree when executable
-behavior exists and must consume the shared conformance scenarios.
+- `settings.gradle.kts`, `build.gradle.kts`, and `gradle.lockfile` — JVM 17
+  build, locked dependencies, Cargo JNI build, tests, and local Maven
+  publication metadata.
+- `gradlew`, `gradlew.bat`, and `gradle/wrapper/` — Reproducible Gradle wrapper.
+- `src/main/kotlin/dev/orion/sdk/Orion.kt` — Public data classes, Flow runner,
+  adapters, direct JNI DTO conversion, and native handle lifecycle.
+- `src/test/kotlin/dev/orion/sdk/RunnerTest.kt` — Deterministic JNI tool-loop
+  smoke test.
 
-The current CI workflow does not yet run a Kotlin job.
+## Shared behavior and documentation
 
-## `bindings/`: internal native integration packages
+- `conformance/scenarios/tool-loop.json` — Common event-order expectation for
+  a model → tool → model run.
+- `conformance/README.md` — Scenario contract and future coverage list.
+- `schemas/protocol-v1.schema.json` — Reviewable language-neutral protocol
+  schema; Rust Serde types remain authoritative during `0.1`.
+- `schemas/README.md` — Schema ownership and generation policy.
+- `examples/weather.py`, `weather.ts`, and `Weather.kt` — Equivalent public API
+  examples using an OpenAI-compatible model and weather tool.
+- `examples/README.md` — Example prerequisites and purpose.
+- `docs/README.md` — Documentation index.
+- `docs/architecture/` — Runtime layers, native boundary, protocol, and future
+  durability model.
+- `docs/contracts/` — Shared public and host-SDK semantics.
+- `docs/decisions/` — ADR process and accepted Rust-kernel decision.
+- `docs/guides/` — Pilot build/use and LLM connectivity.
+- `docs/planning/roadmap.md` — Milestones and deferred features.
+- `docs/policy/governance.md` — Project roles and decision authority.
+- `docs/release/` — Versioning and release gates.
 
-Bindings are transport layers between host SDKs and `orion-ffi`. They are kept
-separate so generated types and ABI details do not become the public API.
+## Generated paths
 
-- `bindings/README.md` — Explains the separation between low-level bindings and
-  public SDK ergonomics and records the planned Python, JavaScript, and Kotlin
-  binding mechanisms.
-
-Language subdirectories are created only when they contain real binding source
-or build metadata. This avoids README-only placeholder trees.
-
-## `conformance/`: cross-language behavioral truth
-
-- `conformance/README.md` — Defines what every language-neutral scenario must
-  contain and catalogs the planned completion, tool, retry, handoff, approval,
-  cancellation, and crash-recovery scenarios.
-
-Machine-readable scenario fixtures will be added after the protocol encoding is
-selected. SDK test suites will consume the same fixtures so implementations
-cannot silently drift apart.
-
-## `schemas/`: versioned data contracts
-
-- `schemas/README.md` — Reserves canonical sources for protocol and persistence
-  schemas and establishes that generated language types must not be edited by
-  hand.
-
-Future schema generation and compatibility checks will feed Rust protocol
-types, native transport, host-language bindings, checkpoint migration, and CI.
-
-## `examples/`: equivalent developer examples
-
-- `examples/README.md` — Defines planned cross-language examples for a minimal
-  agent, typed tools, structured output, streaming, cancellation, checkpoint and
-  resume, approval suspension, delegation, and handoff.
-
-An example should demonstrate the same capability in Python,
-JavaScript/TypeScript, and Kotlin wherever the ecosystems support equivalent
-behavior.
-
-## `docs/`: design and project documentation
-
-- `docs/README.md` — Single navigation index for all maintained documentation.
-
-### `docs/architecture/`
-
-- `overview.md` — Layered architecture, proposed kernel states, and core runtime
-  invariants.
-- `runtime-boundary.md` — Exact responsibility split between deterministic Rust
-  semantics and host-language I/O/integrations.
-- `protocol.md` — Planned command/effect/result/event envelopes, required
-  metadata, and unresolved encoding decisions.
-- `durability.md` — Checkpoint, action receipt, replay-safety, and initial
-  checkpoint-timing model.
-
-### `docs/contracts/`
-
-- `host-sdk.md` — Common semantic concepts and idiomatic expression in
-  Python, JavaScript/TypeScript, and Kotlin, plus conformance obligations.
-
-### `docs/decisions/`
-
-- `README.md` — ADR purpose and allowed statuses.
-- `0000-template.md` — Required structure for a new architecture decision:
-  question, context, alternatives, evidence, experiment, threshold, decision,
-  consequences, and revisit trigger.
-- `0001-rust-semantic-kernel.md` — Proposed decision to centralize deterministic
-  semantics in Rust while host SDKs execute effects natively; includes the
-  required prototype and acceptance thresholds.
-
-### `docs/development/`
-
-- `repository-layout.md` — This complete map of repository structure,
-  responsibilities, and file use cases.
-
-### `docs/release/`
-
-- `process.md` — Future gated publishing process and the present
-  preparation-only state.
-- `versioning.md` — Open decisions for SDK, crate, protocol, checkpoint, runtime,
-  and platform compatibility.
-
-### `docs/planning/`
-
-- `roadmap.md` — Planned progression from the architecture scaffold through the
-  protocol, kernel, SDK, conformance, and production-durability milestones.
-
-### `docs/policy/`
-
-- `governance.md` — Contributor, reviewer, and maintainer roles; decision rules;
-  release authority; and the governance-change process.
-
-## Generated and local-only directories
-
-The following paths may appear during development but are intentionally ignored
-and are not part of the repository architecture:
-
-- `target/` — Rust build output.
-- `node_modules/` and `dist/` — JavaScript dependencies and build output.
-- `build/` and `.gradle/` — JVM/Gradle build and cache data.
-- `__pycache__/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, and `.venv/`
-  — Python bytecode, tool caches, and virtual environments.
-- `.idea/` and `*.iml` — Local IDE project state.
-- `.env` and `.env.*` — Local environment/secrets files; `.env.example` may be
-  committed when a safe template is needed.
-
-## Where new work belongs
-
-- New lifecycle message or shared identity: `crates/orion-protocol` plus schemas
-  and conformance fixtures.
-- New deterministic transition or invariant: `crates/orion-kernel` plus unit,
-  property, and event-trace tests.
-- Retry, approval, timeout, concurrency, or idempotency rule:
-  `crates/orion-policy`.
-- Checkpoint format, migration, store contract, or action receipt:
-  `crates/orion-checkpoint`.
-- ABI, memory ownership, handle, or native transport change: `crates/orion-ffi`
-  and the relevant `bindings/<language>` package.
-- Public language-specific API: the appropriate `sdks/<language>` directory;
-  low-level generated binding types should remain internal.
-- Behavior that must match in every SDK: `conformance/scenarios` and each SDK's
-  test suite.
-- Durable or wire-format shape: `schemas` with generation and compatibility
-  checks.
-- Consequential cross-crate, cross-language, FFI, durability, or compatibility
-  decision: a new file under `docs/decisions` before implementation becomes a
-  public contract.
+`target/`, `node_modules/`, `dist/`, `.gradle/`, `build/`, `.kotlin/`, Python
+bytecode/tool caches, IDE metadata, and local environment files are generated or
+machine-specific. They are ignored and must not be committed. The `examples/`
+directory is intentionally retained even when an example language temporarily
+lacks generated output.

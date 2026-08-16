@@ -1,0 +1,27 @@
+[package]
+name = "orion-kotlin"
+description = "JNI native library for the Orion runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+jni = "0.21"
+orion-ffi = { path = "../../crates/orion-ffi" }
+orion-kernel = { path = "../../crates/orion-kernel" }
+orion-protocol = { path = "../../crates/orion-protocol" }
+serde_json.workspace = true
+
+[lints.rust]
+unsafe_code = "allow"
+missing_docs = "warn"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"

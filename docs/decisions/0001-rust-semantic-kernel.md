@@ -1,8 +1,8 @@
 # ADR-0001: Rust semantic kernel with host-driven effects
 
-- Status: proposed
+- Status: accepted for the v0.1 pilot
 - Date: 2026-08-16
-- Owners: TBD
+- Owner: Govind Yadav
 
 ## Question
 
@@ -22,15 +22,22 @@ threading, ownership, packaging, and debugging complexity.
 3. Each SDK implements its own runtime from a shared written specification.
 4. Orion runs as an out-of-process service accessed through RPC.
 
-## Current hypothesis
+## Decision
 
-Approach 2 provides the best initial balance. This is not yet accepted.
+Use approach 2: Rust is a deterministic semantic kernel and host SDKs execute
+requested effects. Each SDK calls an in-process native module and holds an
+opaque Rust-owned session; mutable kernel state is never serialized between
+turns.
 
-## Required prototype
+## Prototype evidence
 
-Implement the smallest create-run, model-effect, tool-effect, checkpoint,
-resume, and complete path in all three target languages. Validate cancellation,
-streaming, error mapping, packaging, and equivalent event traces.
+Python/PyO3, Kotlin/JNI, and TypeScript/Node-API execute the same model → tool →
+model scenario through Rust-owned sessions. Rust tests effect matching, state
+validation, finish reasons, and usage aggregation. SDKs use native async APIs
+and provider clients without callbacks from Rust threads. Lifecycle streaming,
+cancellation, normalized errors, and local package builds are covered; durable
+checkpoint storage and the full cross-platform release matrix remain later
+acceptance gates.
 
 ## Acceptance threshold
 

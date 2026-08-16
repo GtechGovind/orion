@@ -1,6 +1,6 @@
 # Versioning and compatibility
 
-No compatibility guarantee exists at version `0.0.0`.
+Version `0.1.x` is an alpha contract and may change incompatibly before `1.0`.
 
 Before the first published package, Orion must define:
 

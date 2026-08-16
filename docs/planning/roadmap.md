@@ -4,6 +4,8 @@ The roadmap records intended milestones, not delivery commitments.
 
 ## M0 — Architecture scaffold
 
+Status: complete.
+
 - Repository, governance, security, and contribution policy
 - Rust crate and host SDK boundaries
 - Proposed effect-driven runtime boundary
@@ -12,12 +14,16 @@ The roadmap records intended milestones, not delivery commitments.
 
 ## M1 — Protocol specification
 
+Status: pilot complete; expand conformance fixtures before stability.
+
 - Run, session, state, action, event, effect, and checkpoint identities
 - Versioned command/effect/result envelopes
 - Error taxonomy and compatibility rules
 - Language-neutral conformance fixtures
 
 ## M2 — Minimal deterministic kernel
+
+Status: pilot core complete. Durability-specific states remain.
 
 - Created, preparing, model-call, resolving, action, checkpoint, suspended,
   handoff, and terminal states
@@ -26,15 +32,21 @@ The roadmap records intended milestones, not delivery commitments.
 
 ## M3 — First host SDK
 
+Status: superseded by three pilot SDKs.
+
 - One idiomatic SDK selected through an ADR
 - Host-driven effect execution
 - Streaming, cancellation, and structured output prototype
 
 ## M4 — Multi-language conformance
 
+Status: tool-loop conformance and local native package builds are implemented
+in all three SDKs; signed multi-platform release pipelines and broader
+scenarios remain.
+
 - Python, JavaScript/TypeScript, and Kotlin SDKs
 - Equivalent event traces across SDKs
-- Native package build and signing pipelines
+- Signed, multi-platform native release pipelines
 
 ## M5 — Durability and production semantics
 

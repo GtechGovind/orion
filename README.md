@@ -1,12 +1,14 @@
 # Orion
 
-Orion is a planned open-source, cross-language runtime for reliable LLM-based
-agentic systems.
+Orion is an open-source, cross-language runtime pilot for reliable LLM agents.
+One Rust state machine owns execution semantics while Python, Kotlin, and
+JavaScript/TypeScript SDKs own provider clients and application tools.
 
-The project is currently a **design and repository scaffold**. It contains no
-agent runtime implementation and is not ready for application use.
+Version `0.1.0` is a working pilot with model/tool loops, ordered lifecycle
+events, normalized usage, structured-output declarations, and OpenAI-compatible
+model endpoints.
 
-## Direction
+## Architecture
 
 Orion is designed around a Rust execution core with idiomatic SDKs for Python,
 Kotlin, and JavaScript/TypeScript.
@@ -15,14 +17,27 @@ Kotlin, and JavaScript/TypeScript.
   checkpoint formats, and policy evaluation.
 - Host SDKs own language-native APIs, asynchronous integration, model clients,
   tools, storage drivers, and framework integrations.
-- A narrow effect protocol connects the kernel to host-provided operations.
-- Every SDK must pass the same language-neutral conformance scenarios.
+- PyO3, Node-API, and JNI modules call Rust in-process and retain opaque,
+  Rust-owned run sessions.
+- Versioned protocol DTOs cross native boundaries as language objects; mutable
+  kernel state never leaves Rust.
+- Each SDK passes the same end-to-end tool-loop scenario through Rust.
 
-## Proposed public vocabulary
+## Public vocabulary
 
-`Agent`, `Runner`, `Tool`, `RunContext`, `RunResult`, and `RunEvent` form the
-intended common vocabulary. These names are provisional until accepted through
-the architecture-decision process.
+`Agent`, `Runner`, `Tool`, `ModelRef`, `ModelAdapter`, `ModelRegistry`,
+`RunResult`, and `RunEvent` are the v0.1 concepts.
+
+## Run the pilot
+
+```bash
+cargo build --workspace
+cargo test --workspace
+```
+
+Then run the SDK tests documented in the [pilot guide](docs/guides/pilot.md).
+See also the [public API](docs/contracts/public-api.md) and
+[LLM connectivity guide](docs/guides/llm-connectivity.md).
 
 ## Repository map
 
@@ -42,7 +57,7 @@ See [Repository layout](docs/development/repository-layout.md) and the
 
 ## Status
 
-The current milestone is **M0: architecture scaffold**. See the
+The current milestone is **M1: usable single-agent pilot**. See the
 [roadmap](docs/planning/roadmap.md).
 
 ## Contributing
@@ -51,6 +66,11 @@ The project welcomes design feedback, but implementation work should follow an
 accepted issue or ADR so that public contracts do not emerge accidentally. Read
 the [contribution guide](.github/CONTRIBUTING.md) and
 [governance policy](docs/policy/governance.md).
+
+## Maintainer
+
+Govind Yadav ([@GtechGovind](https://github.com/GtechGovind),
+<gtech.govind2000@gmail.com>) is the project maintainer.
 
 ## License
 
