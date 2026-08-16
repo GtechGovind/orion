@@ -60,6 +60,9 @@ whole kernel transitions are not transported as JSON strings.
   protected registry publication, checksums, and GitHub release automation.
 - `workflows/qodana_code_quality.yml` — Multi-linter Qodana matrix with
   pull-request annotations, retained reports, and high/critical quality gates.
+  Licensed Rust and JavaScript scans activate when their protected project
+  tokens are present; the ordinary CI workflow always enforces Clippy and
+  strict TypeScript independently.
 - `dependabot.yml` — Dependency update schedule for every ecosystem.
 
 ## `.qodana/` and `qodana.yaml`
