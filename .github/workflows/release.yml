@@ -130,7 +130,7 @@ jobs:
         uses: PyO3/maturin-action@86b9d133d34bc1b40018696f782949dac11bd380 # v1.49.4
         with:
           command: build
-          args: --release --locked --compatibility pypi --out ../../release-bundle/python
+          args: --release --locked --out ../../release-bundle/python
           manylinux: "2_17"
           maturin-version: v1.9.3
           working-directory: sdks/python
