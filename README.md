@@ -51,14 +51,10 @@ Additional design guarantees:
 
 ## Quick start
 
-The public registries are not live yet. Build the Python SDK locally, set an
-OpenAI-compatible API key, and run a typed agent:
+Install the Python SDK, set an OpenAI-compatible API key, and run a typed agent:
 
 ```bash
-python3.10 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip maturin
-(cd sdks/python && maturin develop --release)
+python -m pip install orion-agent-sdk==0.0.1
 export OPENAI_API_KEY="your-key"
 ```
 
@@ -134,7 +130,7 @@ ownership model.
 | OpenAI-compatible model endpoints | ✅ Implemented |
 | Checkpoint persistence and replay | 🧭 Planned |
 | Retry scheduling, approvals, and policy evaluation | 🧭 Planned |
-| Public PyPI, npm, and Maven Central coordinates | 🧭 Registry setup pending |
+| Public PyPI, npm, and Maven Central coordinates | ✅ Automated for `0.0.1` |
 
 See the [public API contract](docs/contracts/public-api.md),
 [LLM connectivity guide](docs/guides/llm-connectivity.md), and
@@ -170,11 +166,13 @@ The complete ownership and use case of each maintained path is in the
 
 ## Contributing
 
-Orion welcomes design feedback and focused contributions. Public contracts
-should follow an accepted issue or ADR so that equivalent behavior can be
-implemented in Rust and every SDK together. Start with the
-[contribution guide](.github/CONTRIBUTING.md), then read the
-[engineering instructions](AGENTS.md) and
+Orion welcomes implementation, conformance, benchmark, documentation, security,
+and design-partner contributions. The
+[competitive roadmap](docs/planning/roadmap.md) lists contributor-ready
+milestones and fundable work packages. Public contracts should follow an
+accepted issue or ADR so equivalent behavior can be implemented in Rust and
+every SDK together. Start with the [contribution guide](.github/CONTRIBUTING.md),
+then read the [engineering instructions](AGENTS.md) and
 [governance policy](docs/policy/governance.md).
 
 ## Maintainer

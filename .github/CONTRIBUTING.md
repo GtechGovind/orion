@@ -1,6 +1,6 @@
 # Contributing to Orion
 
-Orion is an executable `0.1` pilot. Contributions must preserve the boundary
+Orion is an executable `0.0.x` pilot. Contributions must preserve the boundary
 between Rust-owned execution semantics and the single application-facing
 workflow exposed idiomatically by every supported SDK.
 
@@ -53,5 +53,17 @@ tests, and package validation blocking for every maintained language.
 Pull requests should explain the problem, affected invariants, compatibility
 impact, validation performed, and any follow-up work. Draft pull requests are
 welcome for early design feedback.
+
+## Choosing roadmap work
+
+Start with the [competitive roadmap](../docs/planning/roadmap.md). Open an issue
+before implementing a milestone item so maintainers can confirm its vertical
+Rust-to-SDK scope, acceptance criteria, and dependencies. Code, conformance
+fixtures, benchmarks, design reviews, security analysis, documentation, and
+design-partner feedback are all valuable contributions.
+
+Funded work follows the same architecture, review, testing, and cross-language
+parity requirements as volunteer work. Sponsors may fund a documented outcome,
+but funding does not grant merge authority or bypass governance.
 
 All contributions are licensed under MIT OR Apache-2.0.
