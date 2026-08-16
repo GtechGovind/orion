@@ -1,33 +1,38 @@
-# Protocol specification outline
+# Protocol specification
 
-The protocol is not implemented. This document defines the work required before
-types are added to `orion-protocol`.
+Version `1.0` is implemented by `orion-protocol` and represented for host
+languages by `schemas/protocol-v1.schema.json`.
 
 ## Envelope families
 
-- Commands: create, step, resume, cancel, inspect
-- Effects: model call, tool execution, approval, external input, persistence
-- Results: normalized provider/tool/storage outcomes
+- Commands: start, resume, cancel, and fail through native session methods
+- Effects: model call and tool execution
+- Results: normalized model and tool outcomes
 - Events: immutable ordered lifecycle observations
 - Terminal outcomes: completed, failed, cancelled
 
 ## Required metadata
 
-- `schema_version`
-- `framework_version`
 - `run_id`
-- `session_id` when applicable
-- monotonic sequence or cursor
-- correlation and causation identities
-- compatibility metadata
+- monotonic event sequence
+- stable action and tool-call identities
+- protocol major and minor version constants
 
-## Open decisions
+## Boundary behavior
 
-- Binary and text encodings
+Bindings convert native dict/object/map DTOs directly to owned Rust protocol
+types. No JSON string transport or serialized run state is used during normal
+execution. Rust Serde types are authoritative. Provider state and schema fields
+remain JSON-compatible values because their public meaning is dynamic. At most
+one effect is outstanding.
+
+## Open decisions after the pilot
+
+- Durable checkpoint export/import encoding
 - Batch and streaming transport shapes
 - Unknown-field and unknown-variant policy
-- FFI error representation
+- Stable native error subclasses/codes
 - Payload size and resource limits
 - Timestamp and monotonic-clock treatment
 
-These decisions require ADRs and cross-language prototypes.
+These decisions require new ADRs and cross-language conformance evidence.

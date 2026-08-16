@@ -1,0 +1,30 @@
+[package]
+name = "orion-javascript"
+description = "Node-API native module for the Orion runtime"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "3", default-features = false, features = ["napi8", "serde-json"] }
+napi-derive = "3"
+orion-ffi = { path = "../../crates/orion-ffi" }
+orion-protocol = { path = "../../crates/orion-protocol" }
+serde_json.workspace = true
+
+[build-dependencies]
+napi-build = "2"
+
+[lints.rust]
+unsafe_code = "allow"
+missing_docs = "warn"
+
+[lints.clippy]
+all = "warn"
+pedantic = "warn"

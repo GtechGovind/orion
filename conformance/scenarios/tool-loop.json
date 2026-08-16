@@ -1,0 +1,10 @@
+{
+  "name": "tool call followed by completion",
+  "model_script": ["tool_call:weather", "complete:Delhi is 31 C"],
+  "expected_event_types": [
+    "run_started", "model_requested", "model_completed", "tool_requested",
+    "tool_completed", "model_requested", "model_completed", "run_completed"
+  ],
+  "expected_turns": 2,
+  "expected_output": "Delhi is 31 C"
+}

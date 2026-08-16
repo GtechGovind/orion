@@ -9,4 +9,9 @@ Versioning once compatibility policy is accepted.
 
 ### Added
 
-- Initial open-source repository and architecture scaffold.
+- Versioned provider-neutral protocol and deterministic Rust kernel.
+- In-process PyO3, Node-API, and JNI bindings with Rust-owned run sessions.
+- Working Python, Kotlin, and TypeScript runners and model/tool loops.
+- OpenAI-compatible adapters, tests, examples, and public documentation.
+- Kernel state validation, bounded turns/tool calls, finish-reason checks, and
+  protected provider request fields.
