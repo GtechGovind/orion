@@ -11,7 +11,7 @@ jobs:
     name: Confirm publishing remains disabled
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Verify M0 packages cannot publish
         run: |
           python - <<'PY'
