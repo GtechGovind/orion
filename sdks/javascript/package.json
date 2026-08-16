@@ -51,7 +51,7 @@
     "release:preview": "napi create-npm-dirs --npm-dir npm --dry-run && npm run check:package",
     "release:verify": "node scripts/verify-release-packages.mjs",
     "package:local": "node scripts/test-local-package.mjs --output-dir local-packages",
-    "test": "npm run build && npm run check:tests && npm run check:examples && tsx --test test/*.test.ts",
+    "test": "npm run build && npm run check:tests && npm run check:examples && node scripts/run-tests.mjs",
     "test:package": "node scripts/test-local-package.mjs",
     "test:package:node20": "npx --yes node@20 scripts/test-local-package.mjs"
   },
