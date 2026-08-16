@@ -221,7 +221,7 @@ jobs:
           mkdir -p artifacts ../../release-dist/npm
           cp ../../collected/javascript/*.node artifacts/
           npm run release:prepare
-          for directory in npm/*; do npm pack "$directory" --ignore-scripts --pack-destination ../../release-dist/npm; done
+          for directory in npm/*; do npm pack "./$directory" --ignore-scripts --pack-destination ../../release-dist/npm; done
           npm pack --ignore-scripts --pack-destination ../../release-dist/npm
           mkdir -p ../../release-consumer/npm
           cd ../../release-consumer/npm
@@ -236,7 +236,7 @@ jobs:
           ./sdks/kotlin/gradlew -p sdks/kotlin clean test publishToMavenLocal --no-daemon -Porion.native.prebuiltDir="$native_dir" -Dmaven.repo.local="$maven_repo"
           ./sdks/kotlin/gradlew -p sdks/kotlin/consumer-smoke run --no-daemon -Dmaven.repo.local="$maven_repo"
           mkdir -p release-dist/maven
-          cp -R "$maven_repo/dev/orion/runtime/orion-kotlin-sdk/${{ needs.authorize.outputs.version }}/." release-dist/maven/
+          cp -R "$maven_repo/io/github/gtechgovind/orion-kotlin-sdk/${{ needs.authorize.outputs.version }}/." release-dist/maven/
       - name: Generate checksums
         shell: bash
         run: |
