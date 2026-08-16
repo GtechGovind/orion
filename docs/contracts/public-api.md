@@ -1,6 +1,6 @@
 # Public API contract
 
-Status: implemented pilot contract for `0.1.x`.
+Status: implemented pilot contract for `0.0.x`.
 
 Orion exposes one application workflow in Python, TypeScript, and Kotlin:
 

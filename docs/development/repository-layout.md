@@ -1,7 +1,7 @@
 # Repository layout and file guide
 
 This guide describes the source-controlled Orion repository as it exists in
-`0.1.0`. The external [Agentic Framework Research & Design document](https://docs.google.com/document/d/1gobjUbbcnHgkUu1dir_0s5q0fBqtME0w0ASAl1mfOro/edit?tab=t.0#heading=h.vzfb1jxxgmqu)
+`0.0.1`. The external [Agentic Framework Research & Design document](https://docs.google.com/document/d/1gobjUbbcnHgkUu1dir_0s5q0fBqtME0w0ASAl1mfOro/edit?tab=t.0#heading=h.vzfb1jxxgmqu)
 is background only; it is not a specification Orion is compared against.
 
 ## Execution path
