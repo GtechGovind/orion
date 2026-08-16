@@ -3,6 +3,7 @@ import {cp, mkdir, mkdtemp, readFile, writeFile} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import {join, resolve} from "node:path";
 import {fileURLToPath} from "node:url";
+import {npmCliArguments} from "./npm-process.mjs";
 
 const platform = platformSuffix();
 const rustTarget = rustTargetFor(platform);
@@ -18,7 +19,7 @@ const tarballs = requestedOutput === undefined
   : resolve(fileURLToPath(root), requestedOutput);
 const consumer = join(workspace, "consumer");
 const platformName = `${sourcePackage.name}-${platform}`;
-const napi = fileURLToPath(new URL("node_modules/.bin/napi", root));
+const napiCli = fileURLToPath(new URL("node_modules/@napi-rs/cli/dist/cli.js", root));
 
 await mkdir(rootStage);
 await mkdir(tarballs, {recursive: true});
@@ -41,11 +42,19 @@ const rootPackage = {
 };
 
 await writeJson(join(rootStage, "package.json"), rootPackage);
-run(napi, ["create-npm-dirs", "--cwd", rootStage, "--npm-dir", "npm"], rootStage);
+run(process.execPath, [
+  napiCli,
+  "create-npm-dirs",
+  "--cwd",
+  rootStage,
+  "--npm-dir",
+  "npm",
+], rootStage);
 
 const platformStage = join(rootStage, "npm", platform);
 await cp(binaryUrl, join(platformStage, binary));
-run(napi, [
+run(process.execPath, [
+  napiCli,
   "pre-publish",
   "--cwd",
   rootStage,
@@ -86,7 +95,10 @@ function pack(directory, destination) {
 
 function run(command, arguments_, cwd) {
 
-  execFileSync(process.platform === "win32" && command === "npm" ? "npm.cmd" : command, arguments_, {
+  const executable = command === "npm" ? process.execPath : command;
+  const executableArguments = command === "npm" ? npmCliArguments(arguments_) : arguments_;
+
+  execFileSync(executable, executableArguments, {
     cwd,
     stdio: "inherit",
   });

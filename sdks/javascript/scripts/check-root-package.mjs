@@ -1,7 +1,7 @@
 import {spawnSync} from "node:child_process";
 import {readFile} from "node:fs/promises";
+import {npmCliArguments} from "./npm-process.mjs";
 
-const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const packLifecycleScripts = ["prepack", "prepare", "postpack"];
 const configuredPackLifecycleScripts = packLifecycleScripts.filter(name => packageJson.scripts?.[name]);
@@ -13,14 +13,18 @@ if (configuredPackLifecycleScripts.length) {
 }
 
 const packed = spawnSync(
-  npm,
-  ["pack", "--dry-run", "--json", "--ignore-scripts"],
+  process.execPath,
+  npmCliArguments(["pack", "--dry-run", "--json", "--ignore-scripts"]),
   {cwd: new URL("..", import.meta.url), encoding: "utf8"},
 );
 
+if (packed.error) {
+  throw packed.error;
+}
+
 if (packed.status !== 0) {
-  process.stderr.write(packed.stderr);
-  process.exit(packed.status ?? 1);
+  if (packed.stderr) process.stderr.write(packed.stderr);
+  throw new Error(`npm pack failed with status ${packed.status ?? "unknown"}`);
 }
 
 const [manifest] = JSON.parse(packed.stdout);
