@@ -15,6 +15,10 @@ failureConditions:
     high: 0
 
 exclude:
+  # Orion enables Kotlin explicit API mode, so explicit visibility and return
+  # types are intentional contract checks rather than redundant syntax.
+  - name: RedundantVisibilityModifier
+  - name: RedundantUnitReturnType
   - name: All
     paths:
       - target

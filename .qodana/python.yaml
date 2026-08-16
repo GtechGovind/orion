@@ -4,6 +4,11 @@ linter: qodana-python-community
 profile:
   name: qodana.recommended
 
+# Give PyCharm's inspections the same declared runtime dependency that strict
+# Pyright and package consumers use. Without it, unresolved Pydantic imports
+# cascade into invalid type and dataclass diagnostics.
+bootstrap: python3 -m pip install "pydantic>=2.11,<3"
+
 failureConditions:
   severityThresholds:
     critical: 0
