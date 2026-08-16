@@ -63,6 +63,9 @@ Verify ownership of the `io.github.gtechgovind` namespace in the Central Publish
 Portal, create a publishing user token, and configure signing material through
 a protected `maven-central` GitHub environment. Maven publications require the
 main artifact, sources, API documentation, complete POM metadata, and signatures.
+Store `MAVEN_SIGNING_KEY` as the ASCII-armored private key. The workflow also
+accepts that armor encoded as Base64 or with escaped newline characters, but it
+rejects public keys and malformed values without logging the secret.
 The authoritative onboarding and deployment process is the
 [Central Publisher Portal guide](https://central.sonatype.org/publish/publish-portal-guide/).
 

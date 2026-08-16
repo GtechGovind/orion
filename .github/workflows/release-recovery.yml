@@ -131,10 +131,24 @@ jobs:
           ORG_GRADLE_PROJECT_orionCentralPublishing: "true"
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
-          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_SIGNING_KEY }}
+          MAVEN_SIGNING_KEY: ${{ secrets.MAVEN_SIGNING_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_SIGNING_KEY_PASSWORD }}
         shell: bash
         run: |
+          signing_key="$MAVEN_SIGNING_KEY"
+          if [[ "$signing_key" != *"BEGIN PGP PRIVATE KEY BLOCK"* && "$signing_key" == *'\n'* ]]; then
+            printf -v signing_key '%b' "$signing_key"
+          fi
+          if [[ "$signing_key" != *"BEGIN PGP PRIVATE KEY BLOCK"* ]]; then
+            if decoded_key="$(printf '%s' "$MAVEN_SIGNING_KEY" | base64 --decode 2>/dev/null)"; then
+              signing_key="$decoded_key"
+            fi
+          fi
+          if [[ "$signing_key" != *"BEGIN PGP PRIVATE KEY BLOCK"* ]]; then
+            echo "MAVEN_SIGNING_KEY must contain an ASCII-armored private PGP key" >&2
+            exit 1
+          fi
+          export ORG_GRADLE_PROJECT_signingInMemoryKey="$signing_key"
           native_dir="$GITHUB_WORKSPACE/collected/kotlin"
           ./sdks/kotlin/gradlew -p sdks/kotlin clean test verifyNativeJar --no-daemon -Porion.native.prebuiltDir="$native_dir"
           ./sdks/kotlin/gradlew -p sdks/kotlin publishAndReleaseToMavenCentral --no-daemon -Porion.native.prebuiltDir="$native_dir"
