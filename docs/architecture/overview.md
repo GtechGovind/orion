@@ -10,7 +10,7 @@ languages without making those languages share one unnatural public API.
 ```text
 Application
   -> Idiomatic host SDK
-      -> Model, tool, storage, and framework adapters
+      -> Provider model and typed application tools
           -> In-process PyO3 / Node-API / JNI binding
               -> Rust semantic kernel
 ```
@@ -20,9 +20,9 @@ effect results, updates run state, emits ordered events, and returns either the
 next effect or a terminal outcome.
 
 The binding owns an opaque Rust session and converts language DTOs directly to
-protocol values. The host SDK owns asynchronous I/O. This prevents Rust from directly invoking
-arbitrary Python callbacks, JavaScript functions, or Kotlin lambdas across
-foreign runtime boundaries.
+protocol values. The host SDK owns asynchronous I/O. This prevents Rust from
+directly invoking arbitrary Python callbacks, JavaScript functions, or Kotlin
+lambdas across foreign runtime boundaries.
 
 ## Runtime states
 

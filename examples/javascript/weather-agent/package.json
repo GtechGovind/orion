@@ -1,0 +1,5 @@
+{
+  "name": "@orion-examples/weather-agent",
+  "private": true,
+  "type": "module"
+}

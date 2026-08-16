@@ -38,9 +38,9 @@ jobs:
         with:
           python-version: "3.12"
       - uses: dtolnay/rust-toolchain@1.88.0
-      - run: python -m pip install maturin ruff pyright
-      - run: python -m compileall sdks/python/src
-      - run: ruff check sdks/python/src sdks/python/tests
+      - run: python -m pip install maturin "pydantic>=2.11,<3" ruff pyright
+      - run: python -m compileall sdks/python/src examples/python/weather_agent
+      - run: ruff check sdks/python/src sdks/python/tests examples/python/weather_agent
       - run: pyright -p sdks/python
       - run: maturin build --release --out dist
         working-directory: sdks/python
@@ -93,7 +93,18 @@ jobs:
       - uses: actions/checkout@v7
       - name: Verify required project files
         run: |
+          test -f AGENTS.md
+          test -f rustfmt.toml
+          test -f crates/AGENTS.md
+          test -f bindings/AGENTS.md
+          test -f sdks/python/AGENTS.md
+          test -f sdks/javascript/AGENTS.md
+          test -f sdks/kotlin/AGENTS.md
+          test -f CLAUDE.md
+          test -f GEMINI.md
           test -f README.md
+          test -f .cursor/rules/orion-engineering.mdc
+          test -f .github/copilot-instructions.md
           test -f .github/CONTRIBUTING.md
           test -f .github/SECURITY.md
           test -f .github/SUPPORT.md
@@ -107,6 +118,11 @@ jobs:
           test -f docs/contracts/host-sdk.md
           test -f docs/decisions/0000-template.md
           test -f docs/decisions/0001-rust-semantic-kernel.md
+          test -f docs/decisions/0002-cross-language-typed-schemas.md
+          test -f examples/python/weather_agent/main.py
+          test -f examples/javascript/weather-agent/src/main.ts
+          test -f examples/kotlin/weather-agent/src/main/kotlin/dev/orion/example/weather/Main.kt
+          test -f examples/javascript/weather-agent/package.json
       - name: Validate JSON documents
         run: |
           python -m json.tool schemas/protocol-v1.schema.json >/dev/null

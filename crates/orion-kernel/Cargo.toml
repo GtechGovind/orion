@@ -11,6 +11,7 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+jsonschema.workspace = true
 orion-protocol = { path = "../orion-protocol" }
 serde.workspace = true
 serde_json.workspace = true

@@ -276,7 +276,7 @@ fn run_step(
 
 #[unsafe(no_mangle)]
 /// Creates a Rust-owned run and returns its opaque JVM handle.
-pub extern "system" fn Java_dev_orion_sdk_NativeKernel_create(
+pub extern "system" fn Java_dev_orion_sdk_internal_NativeKernel_create(
     mut env: JNIEnv<'_>,
     _class: JClass<'_>,
     command: JObject<'_>,
@@ -307,7 +307,7 @@ pub extern "system" fn Java_dev_orion_sdk_NativeKernel_create(
 
 #[unsafe(no_mangle)]
 /// Returns the initial unread step for a native run.
-pub extern "system" fn Java_dev_orion_sdk_NativeKernel_takeStep(
+pub extern "system" fn Java_dev_orion_sdk_internal_NativeKernel_takeStep(
     mut env: JNIEnv<'_>,
     _class: JClass<'_>,
     handle: jlong,
@@ -322,7 +322,7 @@ pub extern "system" fn Java_dev_orion_sdk_NativeKernel_takeStep(
 
 #[unsafe(no_mangle)]
 /// Resumes a native run from a JVM effect-result DTO.
-pub extern "system" fn Java_dev_orion_sdk_NativeKernel_resume(
+pub extern "system" fn Java_dev_orion_sdk_internal_NativeKernel_resume(
     mut env: JNIEnv<'_>,
     _class: JClass<'_>,
     handle: jlong,
@@ -344,7 +344,7 @@ pub extern "system" fn Java_dev_orion_sdk_NativeKernel_resume(
 
 #[unsafe(no_mangle)]
 /// Cancels a native run.
-pub extern "system" fn Java_dev_orion_sdk_NativeKernel_cancel(
+pub extern "system" fn Java_dev_orion_sdk_internal_NativeKernel_cancel(
     mut env: JNIEnv<'_>,
     _class: JClass<'_>,
     handle: jlong,
@@ -354,7 +354,7 @@ pub extern "system" fn Java_dev_orion_sdk_NativeKernel_cancel(
 
 #[unsafe(no_mangle)]
 /// Fails a native run from a JVM protocol-error DTO.
-pub extern "system" fn Java_dev_orion_sdk_NativeKernel_fail(
+pub extern "system" fn Java_dev_orion_sdk_internal_NativeKernel_fail(
     mut env: JNIEnv<'_>,
     _class: JClass<'_>,
     handle: jlong,
@@ -376,7 +376,7 @@ pub extern "system" fn Java_dev_orion_sdk_NativeKernel_fail(
 
 #[unsafe(no_mangle)]
 /// Releases a Rust-owned run handle.
-pub extern "system" fn Java_dev_orion_sdk_NativeKernel_close(
+pub extern "system" fn Java_dev_orion_sdk_internal_NativeKernel_close(
     mut env: JNIEnv<'_>,
     _class: JClass<'_>,
     handle: jlong,

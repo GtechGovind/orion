@@ -1,0 +1,7 @@
+---
+description: Canonical Orion architecture and engineering standards
+alwaysApply: true
+---
+
+Read and follow @../../AGENTS.md before changing or reviewing code. It is the
+canonical repository policy; do not duplicate or weaken its rules here.

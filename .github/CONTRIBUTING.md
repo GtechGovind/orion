@@ -1,7 +1,8 @@
 # Contributing to Orion
 
-Orion is in its architecture phase. Contributions should preserve the boundary
-between the Rust semantic kernel and language-native SDK behavior.
+Orion is an executable `0.1` pilot. Contributions must preserve the boundary
+between Rust-owned execution semantics and the single application-facing
+workflow exposed idiomatically by every supported SDK.
 
 ## Before opening a pull request
 
@@ -15,25 +16,37 @@ between the Rust semantic kernel and language-native SDK behavior.
 
 ```sh
 cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-python -m compileall sdks/python/src
-npm pack --dry-run --prefix sdks/javascript
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --all-features
+python -m compileall sdks/python/src examples/python/weather_agent
+uvx ruff check sdks/python/src sdks/python/tests examples/python/weather_agent
+uvx ruff format --check sdks/python/src sdks/python/tests examples/python/weather_agent
+uvx --with "pydantic>=2.11,<3" pyright -p sdks/python
+(cd sdks/javascript && npm ci && npm run check && npm test && npm pack --dry-run)
+(cd sdks/kotlin && ./gradlew test publishToMavenLocal --no-daemon)
 ```
 
-Kotlin validation will be enabled when the first executable SDK behavior and
-tests are added; the Gradle wrapper is already present.
+Native SDK tests build the corresponding PyO3, Node-API, or JNI module and run
+the deterministic model → tool → model scenario without provider credentials.
+The CI workflow keeps formatting, linting, strict type checking, native builds,
+tests, and package validation blocking for every maintained language.
 
 ## Design rules
 
 - Rust defines deterministic semantics, not host-language ergonomics.
 - SDK APIs should feel native to their language.
+- Every SDK exposes only provider model → typed tool → typed `Agent` →
+  `run`/`stream` → `AgentResult<T>`; low-level runners, registries, schemas,
+  adapters, protocol DTOs, and native handles stay internal.
+- One public capability has one canonical construction path. Do not add
+  compatibility aliases or parallel convenience APIs while compatibility mode
+  is disabled in `AGENTS.md`.
 - Foreign runtimes execute model, tool, storage, and integration effects.
 - FFI contracts use owned, versioned data rather than Rust-specific layouts.
 - Streaming and non-streaming observe the same underlying run lifecycle.
 - No public contract is considered stable before the first compatibility ADR.
-- No crate or SDK package may be published until naming and namespace ownership
-  are confirmed.
+- Package publishing remains release-gated until naming, namespace ownership,
+  artifact signing, and the native support matrix are confirmed.
 
 ## Pull requests
 

@@ -1,34 +1,13 @@
-"""Idiomatic Python API for the Orion v0.1 Rust-kernel pilot."""
+"""Simple typed API for agents executed by the Orion Rust runtime."""
 
-from .models import (
-    Agent,
-    ModelAdapter,
-    ModelProfile,
-    ModelRef,
-    ModelRegistry,
-    ModelResponse,
-    OpenAICompatibleAdapter,
-    RunEvent,
-    RunResult,
-    Tool,
-    ToolCall,
-    Usage,
-)
-from .runner import OrionError, Runner
+from .provider import OpenAI
+from .runtime import Agent, AgentResult, ErrorCode, OrionError, RunEvent
 
 __all__ = [
     "Agent",
-    "ModelAdapter",
-    "ModelProfile",
-    "ModelRef",
-    "ModelRegistry",
-    "ModelResponse",
-    "OpenAICompatibleAdapter",
+    "AgentResult",
+    "ErrorCode",
+    "OpenAI",
     "OrionError",
     "RunEvent",
-    "RunResult",
-    "Runner",
-    "Tool",
-    "ToolCall",
-    "Usage",
 ]

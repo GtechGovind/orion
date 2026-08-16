@@ -1,6 +1,11 @@
 # Versioning and compatibility
 
 Version `0.1.x` is an alpha contract and may change incompatibly before `1.0`.
+The canonical development switch is `COMPATIBILITY_MODE` in the root
+`AGENTS.md`; it is currently `disabled`. While disabled, contributors prefer a
+clean contract and update all repository consumers together instead of retaining
+aliases or migration facades. Enabling that flag, or an explicit user request,
+activates compatibility-preservation and migration requirements.
 
 Before the first published package, Orion must define:
 
