@@ -82,7 +82,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.orion.runtime:orion-kotlin-sdk:0.0.1")
+    implementation("io.github.gtechgovind:orion-kotlin-sdk:0.0.1")
 }
 ```
 

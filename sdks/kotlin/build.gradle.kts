@@ -13,7 +13,7 @@ plugins {
     id("com.vanniktech.maven.publish.base") version "0.37.0"
 }
 
-group = "dev.orion.runtime"
+group = "io.github.gtechgovind"
 version = "0.0.1"
 
 repositories {

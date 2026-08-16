@@ -11,7 +11,7 @@ tag. Never publish an SDK directly from an unmerged pull-request branch.
 |---|---|---|
 | Python | `orion-agent-sdk` | PyPI |
 | JavaScript/TypeScript | `@orion-runtime/sdk` plus target packages | npm |
-| Kotlin/JVM | `dev.orion.runtime:orion-kotlin-sdk` | Maven Central |
+| Kotlin/JVM | `io.github.gtechgovind:orion-kotlin-sdk` | Maven Central |
 
 These coordinates are not public until their registry pages and ownership are
 verified. A name returning “not found” is not proof that the maintainer owns the
@@ -54,7 +54,7 @@ and the [napi-rs native release model](https://napi.rs/docs/deep-dive/release).
 
 ### Maven Central
 
-Verify ownership of the `dev.orion.runtime` namespace in the Central Publisher
+Verify ownership of the `io.github.gtechgovind` namespace in the Central Publisher
 Portal, create a publishing user token, and configure signing material through
 a protected `maven-central` GitHub environment. Maven publications require the
 main artifact, sources, API documentation, complete POM metadata, and signatures.
