@@ -1,0 +1,173 @@
+name: Recover verified release publication
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Workflow run containing the verified release artifacts
+        required: true
+        type: string
+      tag:
+        description: Existing immutable release tag
+        required: true
+        type: string
+      commit_sha:
+        description: Exact commit referenced by the release tag and artifacts
+        required: true
+        type: string
+      publish_npm:
+        description: Publish missing npm packages
+        default: true
+        required: true
+        type: boolean
+      publish_maven_central:
+        description: Publish the Maven Central deployment
+        default: true
+        required: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-recovery-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  authorize:
+    name: Authorize immutable release artifacts
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: release
+        name: Verify tag, commit, and source run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ inputs.commit_sha }}
+          RELEASE_RUN_ID: ${{ inputs.source_run_id }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          git fetch origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}" --force
+          test "$(git rev-list -n 1 "$RELEASE_TAG")" = "$RELEASE_COMMIT"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RELEASE_RUN_ID}" --jq .head_sha)" = "$RELEASE_COMMIT"
+          test "$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RELEASE_RUN_ID}" --jq .event)" = "push"
+          version="${RELEASE_TAG#v}"
+          test "$version" != "$RELEASE_TAG"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  publish-npm:
+    name: Publish missing npm distributions
+    if: ${{ inputs.publish_npm }}
+    needs: authorize
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+      - run: npm install --global npm@11.6.2
+      - uses: actions/download-artifact@v7
+        with:
+          name: release-packages-${{ inputs.tag }}-${{ inputs.commit_sha }}
+          path: release-dist
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+      - name: Publish platform packages before root
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          RELEASE_VERSION: ${{ needs.authorize.outputs.version }}
+        shell: bash
+        run: |
+          publish_if_missing() {
+            local package_name="$1"
+            local archive="$2"
+            if npm view "${package_name}@${RELEASE_VERSION}" version >/dev/null 2>&1; then
+              echo "${package_name}@${RELEASE_VERSION} is already published"
+              return
+            fi
+            npm publish "$archive" --access public --provenance
+          }
+
+          publish_if_missing "@orion-runtime/sdk-darwin-arm64" "release-dist/npm/orion-runtime-sdk-darwin-arm64-${RELEASE_VERSION}.tgz"
+          publish_if_missing "@orion-runtime/sdk-linux-x64-gnu" "release-dist/npm/orion-runtime-sdk-linux-x64-gnu-${RELEASE_VERSION}.tgz"
+          publish_if_missing "@orion-runtime/sdk-win32-x64-msvc" "release-dist/npm/orion-runtime-sdk-win32-x64-msvc-${RELEASE_VERSION}.tgz"
+          publish_if_missing "@orion-runtime/sdk" "release-dist/npm/orion-runtime-sdk-${RELEASE_VERSION}.tgz"
+
+  publish-maven-central:
+    name: Publish Maven Central deployment
+    if: ${{ inputs.publish_maven_central }}
+    needs: authorize
+    runs-on: ubuntu-latest
+    environment: maven-central
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.commit_sha }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: native-*-${{ inputs.commit_sha }}
+          path: collected
+          merge-multiple: true
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+      - name: Reverify and publish multi-native JAR
+        env:
+          ORG_GRADLE_PROJECT_orionCentralPublishing: "true"
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_SIGNING_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          native_dir="$GITHUB_WORKSPACE/collected/kotlin"
+          ./sdks/kotlin/gradlew -p sdks/kotlin clean test verifyNativeJar --no-daemon -Porion.native.prebuiltDir="$native_dir"
+          ./sdks/kotlin/gradlew -p sdks/kotlin publishAndReleaseToMavenCentral --no-daemon -Porion.native.prebuiltDir="$native_dir"
+
+  github-release:
+    name: Publish checksummed GitHub release
+    needs: [authorize, publish-npm, publish-maven-central]
+    if: >-
+      ${{
+        always() &&
+        needs.authorize.result == 'success' &&
+        (needs.publish-npm.result == 'success' || needs.publish-npm.result == 'skipped') &&
+        (needs.publish-maven-central.result == 'success' || needs.publish-maven-central.result == 'skipped')
+      }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: release-packages-${{ inputs.tag }}-${{ inputs.commit_sha }}
+          path: release-dist
+          run-id: ${{ inputs.source_run_id }}
+          github-token: ${{ github.token }}
+      - name: Create or repair release from verified tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+        shell: bash
+        run: |
+          mapfile -d '' assets < <(find release-dist -type f -print0)
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$RELEASE_TAG" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --title "Orion $RELEASE_TAG"
+          fi
