@@ -240,8 +240,18 @@ jobs:
       - name: Generate checksums
         shell: bash
         run: |
-          find release-dist -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > release-dist/SHA256SUMS
-          sha256sum --check release-dist/SHA256SUMS
+          find release-dist/maven release-dist/npm release-dist/python -type f -printf '%f\n' | sort | uniq -d | grep -q . && {
+            echo "Release asset filenames must be unique" >&2
+            exit 1
+          }
+          (
+            cd release-dist
+            find maven npm python -type f ! -name SHA256SUMS -print0 \
+              | sort -z \
+              | xargs -0 sha256sum \
+              | sed -E 's#  (maven|npm|python)/#  #'
+          ) > release-dist/SHA256SUMS
+          (cd release-dist && sha256sum --check SHA256SUMS)
       - uses: actions/upload-artifact@v6
         with:
           name: release-packages-${{ github.ref_name }}-${{ github.sha }}
