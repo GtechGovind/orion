@@ -130,14 +130,14 @@ jobs:
         uses: PyO3/maturin-action@86b9d133d34bc1b40018696f782949dac11bd380 # v1.49.4
         with:
           command: build
-          args: --release --locked --out ../../release-bundle/python
+          args: --release --locked --out ../../python-wheel
           manylinux: "2_17"
           maturin-version: v1.9.3
           working-directory: sdks/python
       - name: Test installed Python wheel
         shell: bash
         run: |
-          python -m pip install --force-reinstall release-bundle/python/*.whl
+          python -m pip install --force-reinstall python-wheel/*.whl
           python -I -c "import orion_sdk; assert orion_sdk.Agent"
           python -m unittest discover -s sdks/python/tests -v
       - name: Build and test Node package
@@ -163,6 +163,8 @@ jobs:
           KOTLIN_LIBRARY: ${{ matrix.kotlin-library }}
         shell: bash
         run: |
+          mkdir -p release-bundle/python
+          cp python-wheel/*.whl release-bundle/python/
           mkdir -p release-bundle/javascript
           cp "sdks/javascript/dist/orion_native.${NODE_PLATFORM}.node" release-bundle/javascript/
           mkdir -p "release-bundle/kotlin/${KOTLIN_OS}/${KOTLIN_ARCH}"
