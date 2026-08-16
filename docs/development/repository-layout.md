@@ -58,22 +58,7 @@ whole kernel transitions are not transported as JSON strings.
   package-readiness audit.
 - `workflows/release.yml` — Tag-only native build, clean-consumer verification,
   protected registry publication, checksums, and GitHub release automation.
-- `workflows/qodana_code_quality.yml` — Multi-linter Qodana matrix with
-  pull-request annotations, retained reports, and high/critical quality gates.
-  Licensed Rust and JavaScript scans activate when their protected project
-  tokens are present; the ordinary CI workflow always enforces Clippy and
-  strict TypeScript independently.
 - `dependabot.yml` — Dependency update schedule for every ecosystem.
-
-## `.qodana/` and `qodana.yaml`
-
-- `qodana.yaml` — Default Kotlin/JVM project discovery, recommended inspection
-  profile, generated-path exclusions, and blocking severity thresholds.
-- `.qodana/rust.yaml`, `.qodana/python.yaml`, and
-  `.qodana/javascript.yaml` — Language-specific monorepo inspection profiles.
-  Qodana uses separate linters because one linter does not deeply analyze every
-  language in this repository. The workflow also uses a distinct protected
-  Qodana Cloud project token for each linter.
 
 ## `.cursor/`
 

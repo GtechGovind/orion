@@ -283,10 +283,6 @@ internal/   native loading, FFI conversion, and protocol parsing
   `npm test`, and `npm pack --dry-run` as applicable.
 - Kotlin: from `sdks/kotlin`, run
   `./gradlew test publishToMavenLocal --no-daemon`.
-- Qodana: keep `qodana.yaml`, `.qodana/*.yaml`, and the Qodana workflow aligned
-  with every maintained language. Use the recommended inspection profiles,
-  exclude only generated or machine-local paths, and do not weaken the zero
-  high/critical quality gate to make a change pass.
 - Before finishing, inspect the complete diff for accidental API changes,
   generated artifacts, secrets, debug code, duplicate logic, and stale docs.
 

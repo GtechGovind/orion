@@ -40,10 +40,6 @@ Versioning once compatibility policy is accepted.
 - Coordinated tag-only release automation that builds the supported native
   matrix, verifies clean external consumers, publishes through protected
   registry environments, records checksums, and creates a GitHub release.
-- Multi-linter Qodana analysis for Rust, Python, JavaScript/TypeScript, and
-  Kotlin with recommended inspections and zero tolerance for high or critical
-  findings.
-
 ### Changed
 
 - Replaced public model-reference, adapter, registry, runner, codec, raw-schema,

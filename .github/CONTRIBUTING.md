@@ -28,13 +28,8 @@ uvx --with "pydantic>=2.11,<3" pyright -p sdks/python
 
 Native SDK tests build the corresponding PyO3, Node-API, or JNI module and run
 the deterministic model → tool → model scenario without provider credentials.
-The Qodana workflow then applies its recommended Rust, Python,
-JavaScript/TypeScript, and Kotlin inspection profiles to the maintained source;
-high or critical findings block each available scan. Each linter can use its own
-Qodana Cloud project token (`QODANA_RUST_TOKEN`, `QODANA_PYTHON_TOKEN`,
-`QODANA_JAVASCRIPT_TOKEN`, or `QODANA_KOTLIN_TOKEN`); paid Rust and JavaScript
-analysis reports an explicit warning and does not run until its token is
-configured. Clippy and strict TypeScript checks remain blocking in CI.
+The CI workflow keeps formatting, linting, strict type checking, native builds,
+tests, and package validation blocking for every maintained language.
 
 ## Design rules
 
