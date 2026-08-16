@@ -1,8 +1,22 @@
 # Orion Python SDK
 
+[![PyPI](https://img.shields.io/pypi/v/orion-agent-sdk?logo=pypi&logoColor=white)](https://pypi.org/project/orion-agent-sdk/)
+[![Python](https://img.shields.io/pypi/pyversions/orion-agent-sdk?logo=python&logoColor=white)](https://pypi.org/project/orion-agent-sdk/)
+
 Python 3.10+ SDK backed by an in-process abi3 PyO3 module. The supported API is
 intentionally small: `Agent`, provider models such as `OpenAI`, typed results,
 lifecycle events, and SDK errors.
+
+## Published release
+
+```bash
+python -m pip install orion-agent-sdk==0.0.1
+```
+
+PyPI provides abi3 wheels for macOS arm64, Linux x86-64 glibc, and Windows
+x86-64, plus a complete source distribution. See the
+[`v0.0.1` release assets](https://github.com/GtechGovind/orion/releases/tag/v0.0.1)
+for checksums.
 
 ```python
 import asyncio

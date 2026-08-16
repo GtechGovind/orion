@@ -1,12 +1,20 @@
 # Orion JavaScript/TypeScript SDK
 
+[![npm](https://img.shields.io/npm/v/%40orion-runtime%2Fsdk?logo=npm)](https://www.npmjs.com/package/@orion-runtime/sdk)
+[![Node.js](https://img.shields.io/node/v/%40orion-runtime%2Fsdk?logo=nodedotjs)](https://www.npmjs.com/package/@orion-runtime/sdk)
+
 Strict Node.js SDK backed by an in-process Node-API module. TypeScript types are
 erased at runtime, so the single supported tool declaration uses Zod for input
 and output validation.
 
 ```bash
-npm install @orion-runtime/sdk
+npm install @orion-runtime/sdk@0.0.1
 ```
+
+The public root package selects the exact native package for macOS arm64, Linux
+x86-64 glibc, or Windows x86-64. The
+[`v0.0.1` release](https://github.com/GtechGovind/orion/releases/tag/v0.0.1)
+contains the same four npm tarballs and their checksums.
 
 ```ts
 import {Agent, OpenAI, tool, z} from "@orion-runtime/sdk";
