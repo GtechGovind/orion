@@ -1,6 +1,6 @@
 # Versioning and compatibility
 
-Version `0.1.x` is an alpha contract and may change incompatibly before `1.0`.
+Version `0.0.x` is an alpha contract and may change incompatibly before `1.0`.
 The canonical development switch is `COMPATIBILITY_MODE` in the root
 `AGENTS.md`; it is currently `disabled`. While disabled, contributors prefer a
 clean contract and update all repository consumers together instead of retaining

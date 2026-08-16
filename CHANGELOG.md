@@ -44,6 +44,8 @@ Versioning once compatibility policy is accepted.
   registry environments, records checksums, and creates a GitHub release.
 ### Changed
 
+- Redesigned the project README around the first-run experience, implemented
+  capabilities, cross-language architecture, and direct documentation routes.
 - Replaced public model-reference, adapter, registry, runner, codec, raw-schema,
   and manual JSON-decoding paths with direct provider models, `Agent.run`/
   `Agent.stream`, and decoded `AgentResult<T>` output.

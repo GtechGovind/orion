@@ -1,102 +1,189 @@
+<div align="center">
+
 # Orion
 
-Orion is an open-source, cross-language runtime pilot for reliable LLM agents.
-One Rust state machine owns execution semantics while Python, Kotlin, and
-JavaScript/TypeScript SDKs own provider clients and application tools.
+### One Rust core. Three idiomatic SDKs. Reliable agent execution.
 
-Version `0.0.1` is a working pilot with model/tool loops, ordered lifecycle
-events, normalized usage, structured-output declarations, and OpenAI-compatible
-model endpoints.
+Build typed LLM agents in Python, TypeScript, or Kotlin while a deterministic
+Rust state machine owns the execution semantics.
 
-## Architecture
+[![CI](https://github.com/GtechGovind/orion/actions/workflows/ci.yml/badge.svg)](https://github.com/GtechGovind/orion/actions/workflows/ci.yml)
+[![Version](https://img.shields.io/badge/version-0.0.1-7c3aed)](CHANGELOG.md)
+[![Rust](https://img.shields.io/badge/Rust-1.88%2B-d65d0e?logo=rust)](rust-toolchain.toml)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776ab?logo=python&logoColor=white)](sdks/python/README.md)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Node_20.17%2B-3178c6?logo=typescript&logoColor=white)](sdks/javascript/README.md)
+[![Kotlin](https://img.shields.io/badge/Kotlin-JVM_17-7f52ff?logo=kotlin&logoColor=white)](sdks/kotlin/README.md)
+[![License](https://img.shields.io/badge/license-MIT_OR_Apache--2.0-22c55e)](#license)
 
-Orion is designed around a Rust execution core with idiomatic SDKs for Python,
-Kotlin, and JavaScript/TypeScript.
+[Quick start](#quick-start) · [Examples](examples/README.md) ·
+[Documentation](docs/README.md) · [Architecture](docs/architecture/overview.md) ·
+[Roadmap](docs/planning/roadmap.md)
 
-- Rust currently owns deterministic runtime semantics, transitions, event
-  ordering, protocol validation, and schema validation. The architecture
-  reserves checkpoint and policy semantics for future Rust layers.
-- Host SDKs own language-native APIs, asynchronous integration, model clients,
-  tools, storage drivers, and framework integrations.
-- PyO3, Node-API, and JNI modules call Rust in-process and retain opaque,
-  Rust-owned run sessions.
-- Versioned protocol DTOs cross native boundaries as language objects; mutable
-  kernel state never leaves Rust.
-- Each SDK passes the same end-to-end tool-loop scenario through Rust.
+</div>
 
-## Public vocabulary
+---
 
-Applications use `Agent`, provider models such as `OpenAI`, language-native
-typed tools, `AgentResult`, and lifecycle events. Runners, registries, codecs,
-protocol DTOs, and native sessions remain internal.
+Orion is an open-source, cross-language runtime for agents that call models,
+execute typed tools, stream lifecycle events, and return structured results.
+Application code stays natural in its host language; the critical state machine
+runs in-process through PyO3, Node-API, or JNI—never through a JSON subprocess.
 
-## One supported workflow
+> **Release status:** `0.0.1` is the first usable pilot. The single-agent model
+> and tool loop is implemented and tested across all three SDKs. Durability,
+> approvals, retries, and policy enforcement remain roadmap work.
 
-Every SDK follows the same application path:
+## Why Orion?
 
-```text
-provider model → typed tool → typed Agent → run/stream → AgentResult<T>
-```
+| Deterministic core | Native developer experience | Typed end to end |
+|---|---|---|
+| Rust owns transitions, limits, event order, cancellation, and validation. | Python functions, TypeScript Zod schemas, and Kotlin serializers remain idiomatic. | Tool arguments and structured output are validated at the Rust boundary and decoded into host types. |
 
-Python accepts an annotated function directly. TypeScript uses one Zod-backed
-`tool({...})` declaration because static types are erased at runtime. Kotlin
-uses one `tool(name, description, function)` declaration with a stable explicit
-model-visible name. There are no public runner, registry, raw-schema, adapter,
-model-reference, or native-session alternatives.
+Additional design guarantees:
 
-Complete runnable applications are documented in the
-[cross-language examples](examples/README.md). To consume a built SDK from a
-different project, follow the [installation guide](docs/guides/installation.md).
+- **One supported workflow** — provider model → typed tool → `Agent` →
+  `run`/`stream` → `AgentResult<T>`.
+- **No duplicate low-level API** — runners, registries, codecs, protocol DTOs,
+  model references, and native sessions remain internal.
+- **Stable failures** — equivalent error categories, retryability, and retry
+  delays across Python, TypeScript, and Kotlin.
+- **Same behavior everywhere** — every SDK passes the same deterministic
+  model → tool → model scenario through Rust.
 
-## Run the pilot
+## Quick start
+
+The public registries are not live yet. Build the Python SDK locally, set an
+OpenAI-compatible API key, and run a typed agent:
 
 ```bash
-cargo build --workspace
-cargo test --workspace
+python3.10 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip maturin
+(cd sdks/python && maturin develop --release)
+export OPENAI_API_KEY="your-key"
 ```
 
-Then run the SDK tests documented in the [pilot guide](docs/guides/pilot.md).
-See also the [public API](docs/contracts/public-api.md) and
-[LLM connectivity guide](docs/guides/llm-connectivity.md).
+```python
+import asyncio
+from dataclasses import dataclass
+
+from orion_sdk import Agent, OpenAI
+
+
+@dataclass(frozen=True, slots=True)
+class Weather:
+    city: str
+    temperature_c: int
+
+
+async def get_weather(city: str) -> Weather:
+    """Get the current weather for a city."""
+    return Weather(city=city, temperature_c=31)
+
+
+async def main() -> None:
+    agent = Agent(
+        model=OpenAI("gpt-5-mini"),
+        tools=[get_weather],
+        output=Weather,
+        instructions="Use the weather tool.",
+    )
+
+    result = await agent.run("What is the weather in Delhi?")
+    print(result.output)
+
+
+asyncio.run(main())
+```
+
+Prefer another language? Start with the
+[TypeScript SDK](sdks/javascript/README.md) or
+[Kotlin SDK](sdks/kotlin/README.md). Complete multi-file weather applications
+for all three languages live in [`examples/`](examples/README.md).
+
+## How it works
+
+```mermaid
+flowchart LR
+    App[Application] --> SDK[Idiomatic host SDK]
+    SDK --> Binding[PyO3 / Node-API / JNI]
+    Binding --> Core[Rust semantic core]
+    Core --> Effect{Next effect}
+    Effect -->|Model request| Provider[LLM provider]
+    Effect -->|Tool request| Tool[Typed application tool]
+    Provider --> SDK
+    Tool --> SDK
+    Core --> Result[Events + typed result]
+    Result --> App
+```
+
+The SDK performs provider and tool I/O, then resumes the Rust-owned run with a
+typed effect result. Mutable kernel state stays in Rust; only versioned DTOs
+cross the native boundary. Read the
+[runtime boundary](docs/architecture/runtime-boundary.md) for the detailed
+ownership model.
+
+## Implemented in `0.0.1`
+
+| Capability | Status |
+|---|---|
+| Rust-owned model/tool state machine | ✅ Implemented |
+| Python, TypeScript, and Kotlin SDKs | ✅ Implemented |
+| Typed tools and structured terminal output | ✅ Implemented |
+| Streaming lifecycle events and normalized usage | ✅ Implemented |
+| Cancellation, turn limits, and stable error categories | ✅ Implemented |
+| OpenAI-compatible model endpoints | ✅ Implemented |
+| Checkpoint persistence and replay | 🧭 Planned |
+| Retry scheduling, approvals, and policy evaluation | 🧭 Planned |
+| Public PyPI, npm, and Maven Central coordinates | 🧭 Registry setup pending |
+
+See the [public API contract](docs/contracts/public-api.md),
+[LLM connectivity guide](docs/guides/llm-connectivity.md), and
+[roadmap](docs/planning/roadmap.md) for the precise supported boundary.
+
+## Build and verify
+
+```bash
+cargo fmt --all --check
+cargo clippy --workspace --all-targets --all-features -- -D warnings
+cargo test --workspace --all-features
+```
+
+Language-specific build, package, and clean-consumer commands are documented in
+the [pilot guide](docs/guides/pilot.md) and
+[installation guide](docs/guides/installation.md).
 
 ## Repository map
 
 ```text
 crates/          Rust protocol, kernel, policy, persistence, FFI, and test crates
+bindings/        PyO3, Node-API, and JNI integration boundaries
 sdks/            Idiomatic Python, JavaScript/TypeScript, and Kotlin SDKs
-bindings/        Native-binding integration boundaries
+examples/        Runnable, type-checked cross-language applications
 conformance/     Cross-language behavioral scenarios and expected traces
 schemas/         Versioned wire and persistence schemas
-docs/            Architecture, ADRs, project policy, and SDK contracts
-examples/        Runnable, type-checked cross-language usage examples
-.github/         CI, release preparation, issue, and contribution automation
+docs/            Architecture, contracts, ADRs, guides, policy, and roadmap
+.github/         CI, release, issue, and contribution automation
 ```
 
-See [Repository layout](docs/development/repository-layout.md) and the
-[architecture overview](docs/architecture/overview.md).
-
-## Status
-
-The usable single-agent pilot and production-oriented native package pipelines
-are complete. Public registry publication remains gated on namespace ownership,
-trusted-publisher configuration, and protected release credentials; see the
-[roadmap](docs/planning/roadmap.md) and
-[publishing guide](docs/release/publishing.md).
+The complete ownership and use case of each maintained path is in the
+[repository layout guide](docs/development/repository-layout.md).
 
 ## Contributing
 
-The project welcomes design feedback, but implementation work should follow an
-accepted issue or ADR so that public contracts do not emerge accidentally. Read
-the [contribution guide](.github/CONTRIBUTING.md) and
+Orion welcomes design feedback and focused contributions. Public contracts
+should follow an accepted issue or ADR so that equivalent behavior can be
+implemented in Rust and every SDK together. Start with the
+[contribution guide](.github/CONTRIBUTING.md), then read the
+[engineering instructions](AGENTS.md) and
 [governance policy](docs/policy/governance.md).
 
 ## Maintainer
 
-Govind Yadav ([@GtechGovind](https://github.com/GtechGovind),
-<gtech.govind2000@gmail.com>) is the project maintainer.
+Orion is maintained by Govind Yadav
+([@GtechGovind](https://github.com/GtechGovind),
+<gtech.govind2000@gmail.com>).
 
 ## License
 
-Orion is intended to be available under either the Apache License 2.0 or the MIT
-License, at your option. See [LICENSE-APACHE](LICENSE-APACHE) and
-[LICENSE-MIT](LICENSE-MIT).
+Licensed under either the [Apache License 2.0](LICENSE-APACHE) or the
+[MIT License](LICENSE-MIT), at your option.
