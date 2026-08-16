@@ -1,43 +1,49 @@
 # Connecting Orion to an LLM
 
-Register provider adapters on `Runner`; store only `ModelRef` on `Agent`. This
-keeps secrets, HTTP clients, vendor objects, and tenant configuration outside
-Rust and outside durable definitions.
-
-All SDKs include `OpenAICompatibleAdapter`. It targets Chat Completions-shaped
-endpoints and maps messages, function tools, common settings, calls, finish
-reasons, and usage. Set `OPENAI_API_KEY` or pass the key to the adapter. Set a
-custom base URL for a compatible gateway or local model server.
+Provider configuration belongs directly on the application-facing model. The
+SDK internally creates the adapter, registry, and runner; Rust never receives
+credentials or performs network I/O.
 
 Python:
 
 ```python
-runner = Runner(models=ModelRegistry([OpenAICompatibleAdapter()]))
-agent = Agent("assistant", "Assistant", "Be concise", "openai:gpt-5-mini")
-result = await runner.run(agent, "Hello")
+agent = Agent(
+    model=OpenAI("gpt-5-mini"),
+    tools=[get_weather],
+    output=WeatherAnswer,
+)
+result = await agent.run("What is the weather in Delhi?")
+print(result.output.summary)
 ```
 
 TypeScript:
 
 ```ts
-const runner = new Runner(new ModelRegistry([new OpenAICompatibleAdapter()]));
-const agent = new Agent({id: "assistant", name: "Assistant",
-  instructions: "Be concise", model: "openai:gpt-5-mini"});
-const result = await runner.run(agent, "Hello");
+const agent = new Agent({
+  model: new OpenAI("gpt-5-mini"),
+  tools: [getWeather],
+  output: WeatherAnswer,
+});
+const result = await agent.run("What is the weather in Delhi?");
+console.log(result.output.summary);
 ```
 
 Kotlin:
 
 ```kotlin
-val runner = Runner(ModelRegistry(listOf(OpenAICompatibleAdapter())))
-val agent = Agent("assistant", "Assistant", "Be concise", "openai:gpt-5-mini")
-val result = runner.run(agent, "Hello")
+val agent = Agent(
+    model = OpenAI("gpt-5-mini"),
+    tools = listOf(tool(
+        name = "weather",
+        description = "Get the weather for a city.",
+        function = ::getWeather,
+    )),
+    output = WeatherAnswer.serializer(),
+)
+val result = agent.run("What is the weather in Delhi?")
+println(result.output.summary)
 ```
 
-For another API, implement `ModelAdapter`, expose a stable provider key,
-translate the provider-neutral request, and return `ModelResponse`. The adapter
-owns auth, pooling, translation, cancellation, and error mapping. Rust owns
-turns, ordering, limits, tool scheduling, and the terminal outcome.
-
-The protocol defines `ModelProfile` using `native`, `emulated`, `unsupported`,
-and `unknown`. Mandatory capability preflight is scheduled after the pilot.
+`OpenAI` reads `OPENAI_API_KEY` by default and accepts an explicit API key,
+compatible base URL, and timeout. The examples provide complete typed tool and
+streaming applications in all three languages.

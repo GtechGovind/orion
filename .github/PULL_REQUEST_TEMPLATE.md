@@ -27,3 +27,5 @@ Link the relevant ADR, or explain why one is unnecessary.
 - [ ] Public and durable compatibility implications are documented.
 - [ ] Tests or conformance scenarios cover observable behavior.
 - [ ] Documentation and changelog are updated where applicable.
+- [ ] Public SDK changes preserve one canonical workflow and equivalent
+      Python, TypeScript, and Kotlin capability coverage.

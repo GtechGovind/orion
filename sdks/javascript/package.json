@@ -2,15 +2,30 @@
   "name": "@orion-runtime/sdk",
   "version": "0.1.0",
   "description": "JavaScript and TypeScript SDK for the Orion Rust agent runtime pilot",
-  "private": true,
   "author": {
     "name": "Govind Yadav",
     "email": "gtech.govind2000@gmail.com"
   },
+  "homepage": "https://github.com/GtechGovind/orion#readme",
+  "bugs": {
+    "url": "https://github.com/GtechGovind/orion/issues"
+  },
+  "keywords": [
+    "agents",
+    "ai",
+    "llm",
+    "napi-rs",
+    "rust",
+    "typescript"
+  ],
   "license": "MIT OR Apache-2.0",
   "type": "module",
   "files": [
-    "dist",
+    "dist/**/*.d.ts",
+    "dist/**/*.js",
+    "dist/native.cjs",
+    "LICENSE-APACHE",
+    "LICENSE-MIT",
     "README.md"
   ],
   "exports": {
@@ -25,9 +40,20 @@
     "build:native": "napi build --release --platform --manifest-path ../../bindings/javascript/Cargo.toml --output-dir dist --js native.cjs --dts native.d.ts",
     "build:typescript": "tsc -p tsconfig.json",
     "check": "tsc -p tsconfig.json --noEmit",
-    "check:package": "npm pack --dry-run",
-    "test": "npm run build && node --experimental-strip-types --test test/*.test.ts",
-    "prepack": "npm run build"
+    "check:examples": "tsc -p tsconfig.examples.json",
+    "check:tests": "tsc -p tsconfig.test.json",
+    "check:package": "node scripts/check-root-package.mjs",
+    "example:weather": "npm run build && tsx ../../examples/javascript/weather-agent/src/main.ts",
+    "release:collect-artifacts": "napi artifacts --output-dir artifacts --npm-dir npm --build-output-dir dist",
+    "release:create-platform-packages": "napi create-npm-dirs --npm-dir npm",
+    "release:prepare": "npm run release:create-platform-packages && npm run release:collect-artifacts && npm run release:prepare-metadata && npm run release:verify",
+    "release:prepare-metadata": "napi pre-publish --npm-dir npm --tag-style npm --skip-optional-publish --no-gh-release",
+    "release:preview": "napi create-npm-dirs --npm-dir npm --dry-run && npm run check:package",
+    "release:verify": "node scripts/verify-release-packages.mjs",
+    "package:local": "node scripts/test-local-package.mjs --output-dir local-packages",
+    "test": "npm run build && npm run check:tests && npm run check:examples && tsx --test test/*.test.ts",
+    "test:package": "node scripts/test-local-package.mjs",
+    "test:package:node20": "npx --yes node@20 scripts/test-local-package.mjs"
   },
   "repository": {
     "type": "git",
@@ -35,22 +61,28 @@
     "directory": "sdks/javascript"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=20.17.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.4.0",
     "@types/node": "^24.0.0",
+    "tsx": "^4.23.12",
     "typescript": "^5.9.0"
   },
   "napi": {
     "binaryName": "orion_native",
     "targets": [
       "aarch64-apple-darwin",
-      "x86_64-apple-darwin",
       "x86_64-unknown-linux-gnu",
-      "aarch64-unknown-linux-gnu",
-      "x86_64-pc-windows-msvc",
-      "aarch64-pc-windows-msvc"
+      "x86_64-pc-windows-msvc"
     ]
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
   }
 }

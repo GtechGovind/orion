@@ -23,12 +23,16 @@ Status: pilot complete; expand conformance fixtures before stability.
 
 ## M2 — Minimal deterministic kernel
 
-Status: pilot core complete. Durability-specific states remain.
+Status: pilot core complete for running, completed, failed, and cancelled
+states. Durability-specific lifecycle states remain.
 
-- Created, preparing, model-call, resolving, action, checkpoint, suspended,
-  handoff, and terminal states
+- Deterministic model/tool effects with completed, failed, and cancelled
+  terminal states
 - Deterministic event sequencing
-- Fake model and fake tool host
+- Bounded turns, schema validation, and deterministic fake model/tool tests
+
+Checkpoint, suspension, handoff, approval, and replay states are deferred to
+the durability milestone.
 
 ## M3 — First host SDK
 

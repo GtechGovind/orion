@@ -1,36 +1,23 @@
 # Host SDK contract
 
-Each public SDK expresses the same runtime semantics through idiomatic
-language constructs.
+Every SDK exposes the same six public concepts: `Agent`, provider models,
+language-native typed tools, `AgentResult`, lifecycle events, and SDK errors.
 
-## Common concepts
+The supported flow is always model → tools → agent → `run`/`stream`. Internal
+registries, runners, codecs, schemas, adapters, protocol DTOs, and native handles
+must not be re-exported or documented as application choices.
 
-- Agent definition
-- Runner facade
-- Tool definition
-- Model reference, registry, and adapter
-- Run result
-- Typed lifecycle events
+Language expression remains idiomatic:
 
-## Language-specific expression
-
-- Python may use decorators, protocols, generics, `asyncio`, and exceptions.
-- JavaScript/TypeScript may use structural types, Promises, async iterators, and
+- Python uses annotations, dataclasses/Pydantic models, awaitables, and async
+  iterators.
+- TypeScript uses Zod runtime schemas, promises, async iterators, and
   `AbortSignal`.
-- Kotlin may use data classes, sealed hierarchies, coroutines, `Flow`, and
-  structured resource ownership.
+- Kotlin uses `@Serializable` data classes,
+  `tool(name, description, function)`, coroutines, sealed stream items, and
+  `Flow`. The explicit tool name is a stable provider/protocol identifier;
+  Kotlin/JVM reflection is not used to infer it.
 
-Equivalent semantics do not require identical method names or builder styles.
-
-## Conformance
-
-Every SDK must execute shared scenarios and prove:
-
-- equivalent terminal outcomes
-- equivalent semantic event order
-- consistent error categories
-- correct cancellation mapping
-- direct native DTO compatibility at the Rust bridge
-
-Suspension and durable checkpoint conformance are not part of `0.1`. See the
-[public API](public-api.md) and [pilot guide](../guides/pilot.md).
+Conformance requires equivalent terminal output, event order, error categories,
+cancellation, tool validation, structured-output validation, and direct native
+DTO conversion in every SDK.

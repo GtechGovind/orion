@@ -1,0 +1,5 @@
+/artifacts/
+/local-packages/
+/npm/
+/*.tgz
+/*.node

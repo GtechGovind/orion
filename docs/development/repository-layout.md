@@ -23,6 +23,10 @@ whole kernel transitions are not transported as JSON strings.
 
 ## Root files
 
+- `AGENTS.md` — Canonical architecture, readability, modularity, reliability,
+  compatibility, and verification instructions for human and AI contributors.
+- `CLAUDE.md` and `GEMINI.md` — Thin compatibility files that import the
+  canonical `AGENTS.md` policy for tools using vendor-specific context names.
 - `README.md` — Project entry point, architecture summary, build commands,
   maintainer, contribution links, and licensing.
 - `Cargo.toml` — Rust workspace members, shared package metadata, Rust `1.88`
@@ -30,6 +34,8 @@ whole kernel transitions are not transported as JSON strings.
 - `Cargo.lock` — Reproducible Rust dependency resolution for the workspace and
   native modules.
 - `rust-toolchain.toml` — Pins Rust, rustfmt, and Clippy.
+- `rustfmt.toml` — Enforceable Rust whitespace, width, edition, and newline
+  settings. Formatter-inexpressible phase and comment rules live in `AGENTS.md`.
 - `.editorconfig` — Common encoding, newline, whitespace, and indentation
   rules.
 - `.gitignore` — Excludes build output, dependency trees, caches, IDE state,
@@ -40,17 +46,29 @@ whole kernel transitions are not transported as JSON strings.
 
 ## `.github/`
 
+- `copilot-instructions.md` — GitHub Copilot pointer to the canonical root
+  `AGENTS.md` policy.
 - `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, and `SUPPORT.md` —
   Community workflow, conduct, private vulnerability reporting, and support
   routing.
 - `PULL_REQUEST_TEMPLATE.md` — Required change rationale and verification.
 - `ISSUE_TEMPLATE/` — Structured bug and feature forms plus issue routing.
 - `workflows/ci.yml` — Blocking Rust and SDK build/test/package checks.
-- `workflows/release-preflight.yml` — Manual check that public publishing stays
-  disabled until a release decision.
+- `workflows/release-preflight.yml` — Credential-free coordinated version and
+  package-readiness audit.
+- `workflows/release.yml` — Tag-only native build, clean-consumer verification,
+  protected registry publication, checksums, and GitHub release automation.
 - `dependabot.yml` — Dependency update schedule for every ecosystem.
 
+## `.cursor/`
+
+- `rules/orion-engineering.mdc` — Always-applied Cursor rule that points to the
+  canonical root `AGENTS.md` policy.
+
 ## `crates/`: reusable Rust runtime
+
+- `AGENTS.md` — Rust-specific module, API, determinism, error, safety, test, and
+  verification instructions.
 
 ### `orion-protocol`
 
@@ -67,9 +85,13 @@ whole kernel transitions are not transported as JSON strings.
 
 ### `orion-kernel`
 
-- `machine.rs` — Deterministic transition engine, command/checkpoint validation,
-  effect matching, tool validation, finish-reason handling, limits, events, and
-  unit tests.
+- `machine.rs` — Public deterministic kernel operations, effect matching,
+  terminal transitions, and event sequencing.
+- `machine/transitions.rs` — Model/tool result acceptance and next-effect
+  construction.
+- `machine/validation.rs` — Command, checkpoint, bounded-capacity, Draft 2020-12
+  schema, tool-argument, and structured-output validation.
+- `machine/tests.rs` — Deterministic transition and invariant tests.
 - `state.rs` — Serializable internal run state and lifecycle status.
 - `lib.rs` — Public kernel and state exports.
 
@@ -91,6 +113,9 @@ directories. They must not be described as implemented features.
 
 ## `bindings/`: private native modules
 
+- `AGENTS.md` — Cross-binding conversion, lifecycle, safety, panic, and
+  verification instructions.
+
 - `python/Cargo.toml` and `python/src/lib.rs` — PyO3 abi3 module exposing an
   opaque `NativeRun`. `pythonize` maps Python dict/list/scalars directly to
   Serde protocol values without JSON strings.
@@ -109,36 +134,63 @@ belong only in `sdks/`.
 
 ### Python
 
+- `AGENTS.md` — Python typing, async, packaging, error, and validation rules.
 - `pyproject.toml` — Maturin mixed-project build, package metadata, abi3 native
-  module path, Ruff, and strict Pyright configuration.
-- `src/orion_sdk/models.py` — Public models, tools, adapter protocol, registry,
-  and OpenAI-compatible adapter.
-- `src/orion_sdk/runner.py` — Async effect loop over a PyO3 `NativeRun`.
+  module path, complete sdist, Ruff, and strict Pyright configuration.
+- `LICENSE-APACHE`, `LICENSE-MIT`, and `NOTICE` — Legal files embedded in Python
+  wheels and source distributions through PEP 639 metadata.
+- `src/orion_sdk/__init__.py` — The only supported application surface:
+  `Agent`, `OpenAI`, typed results/events, and SDK errors.
+- `src/orion_sdk/model/`, `runtime/`, and `provider/` — Internal model DTOs,
+  schema derivation, registry/runner machinery, and provider transport used to
+  implement the simple root API.
+- `src/orion_sdk/_internal/` — Private native loading plus typed
+  protocol encoding, decoding, and boundary validation.
 - `src/orion_sdk/_native.pyi` and `py.typed` — Native-module type surface and
   PEP 561 marker.
-- `src/orion_sdk/__init__.py` — Stable package exports.
-- `tests/test_runner.py` — Deterministic native tool-loop smoke test.
+- `tests/test_runner.py` — Deterministic simple-API tool-loop and typed-output tests.
 
 ### JavaScript/TypeScript
 
-- `package.json` and `package-lock.json` — Private release-gated npm package,
-  N-API targets, exact dependency resolution, build/test/package scripts, and
+- `AGENTS.md` — Strict TypeScript, ESM, async, exports, native-loading, and
+  validation rules.
+- `package.json` and `package-lock.json` — Public npm package metadata, verified
+  N-API targets, exact dependency resolution, build/test/release scripts, and
   developer metadata.
-- `tsconfig.json` — Strict ESM compilation and declaration output.
-- `src/index.ts` — Public types, models, runner, adapters, and native addon
-  loading.
-- `test/runner.test.ts` — Deterministic native tool-loop smoke test.
+- `tsconfig.json`, `tsconfig.test.json`, and `tsconfig.examples.json` — Strict
+  ESM compilation, declaration output, and independent test/example checking.
+- `src/index.ts` — The only package export: `Agent`, `OpenAI`, `tool`, Zod,
+  typed results/events, run options, and SDK errors.
+- `src/model/`, `runtime/`, and `provider/` — Internal DTOs, schema codecs,
+  registry/runner machinery, and provider transport.
+- `src/internal/` — Private N-API loading, native DTO guards, and protocol
+  conversion.
+- `scripts/` — Root-package inspection, current-platform external-consumer
+  smoke testing, and release-only napi-rs platform-package verification.
+- `test/runner.test.ts` — Deterministic simple-API tool-loop and typed-output tests.
 
 ### Kotlin/JVM
 
+- `AGENTS.md` — Kotlin package, explicit API, coroutine, JNI, error, and
+  validation rules.
 - `settings.gradle.kts`, `build.gradle.kts`, and `gradle.lockfile` — JVM 17
-  build, locked dependencies, Cargo JNI build, tests, and local Maven
-  publication metadata.
+  build, locked dependencies, Cargo JNI resource staging, Dokka, signing,
+  tests, Maven Local, and opt-in Central Portal publication metadata.
 - `gradlew`, `gradlew.bat`, and `gradle/wrapper/` — Reproducible Gradle wrapper.
-- `src/main/kotlin/dev/orion/sdk/Orion.kt` — Public data classes, Flow runner,
-  adapters, direct JNI DTO conversion, and native handle lifecycle.
-- `src/test/kotlin/dev/orion/sdk/RunnerTest.kt` — Deterministic JNI tool-loop
-  smoke test.
+- `src/main/kotlin/dev/orion/sdk/` — Supported `Agent`, `OpenAI`, `tool`, typed
+  result/event, usage, and exception surface.
+- `model/`, `runtime/`, and `provider/` — Internal DTOs, registry/runner
+  machinery, schema-backed host tools, and provider transport.
+- `src/main/kotlin/dev/orion/sdk/internal/` — JNI session ownership, focused
+  agent/model/run protocol conversion, and Kotlin-serialization schema
+  derivation, including secure packaged-native extraction; not a public
+  application API.
+- `src/main/kotlin/dev/orion/sdk/OrionException.kt` — Stable public SDK failure.
+- `src/test/kotlin/dev/orion/sdk/AgentTest.kt` — Deterministic simple-API JNI
+  tool-loop and typed-output tests.
+- `consumer-smoke/` — Independent Gradle application that resolves only the
+  Maven artifact and proves its embedded JNI library loads without
+  `java.library.path`.
 
 ## Shared behavior and documentation
 
@@ -148,18 +200,37 @@ belong only in `sdks/`.
 - `schemas/protocol-v1.schema.json` — Reviewable language-neutral protocol
   schema; Rust Serde types remain authoritative during `0.1`.
 - `schemas/README.md` — Schema ownership and generation policy.
-- `examples/weather.py`, `weather.ts`, and `Weather.kt` — Equivalent public API
-  examples using an OpenAI-compatible model and weather tool.
-- `examples/README.md` — Example prerequisites and purpose.
+- `examples/python/weather_agent/`, `examples/javascript/weather-agent/`, and
+  `examples/kotlin/weather-agent/` — Equivalent, compiler-checked applications
+  split into model, tool, agent, and main modules. They use only the canonical
+  provider-model → typed-tool → agent → stream workflow.
+- `examples/javascript/weather-agent/package.json` — Defines a private,
+  kebab-case npm example package and marks its `src/` tree as ESM.
+- `examples/README.md` — Language-specific prerequisites, build/run commands,
+  credential handling, canonical API usage, and offline verification.
+
+Within each weather application:
+
+- `model/weather.*` owns typed tool arguments, tool results, and the terminal answer.
+- `tool/weather.*`/`WeatherTool.kt` owns application validation and business
+  logic. Provider and runner concerns do not enter it.
+- `agent.*`/`WeatherAgent.kt` wraps functions with the language-native tool
+  declaration and composes the provider model, tool set, instructions, limits,
+  and structured-output contract into an immutable agent.
+- `main.*`/`Main.kt` owns streaming, cancellation where applicable, typed output,
+  and usage reporting; SDK internals own provider and native plumbing.
 - `docs/README.md` — Documentation index.
 - `docs/architecture/` — Runtime layers, native boundary, protocol, and future
   durability model.
 - `docs/contracts/` — Shared public and host-SDK semantics.
-- `docs/decisions/` — ADR process and accepted Rust-kernel decision.
-- `docs/guides/` — Pilot build/use and LLM connectivity.
+- `docs/decisions/` — ADR process, Rust-kernel ownership, and cross-language
+  typed-schema decisions.
+- `docs/guides/` — Pilot build/use, external-project installation, and LLM
+  connectivity.
 - `docs/planning/roadmap.md` — Milestones and deferred features.
 - `docs/policy/governance.md` — Project roles and decision authority.
-- `docs/release/` — Versioning and release gates.
+- `docs/release/` — Versioning, registry ownership, publishing, recovery, and
+  release gates.
 
 ## Generated paths
 

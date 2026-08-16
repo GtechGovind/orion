@@ -25,6 +25,7 @@ impl NativeRun {
     #[napi(constructor)]
     pub fn new(command: Value) -> napi::Result<Self> {
         let command: StartRun = serde_json::from_value(command).map_err(map_error)?;
+
         Ok(Self {
             session: RunSession::start(command).map_err(map_error)?,
         })
@@ -41,6 +42,7 @@ impl NativeRun {
             .session
             .take_step()
             .ok_or_else(|| napi::Error::from_reason("no unread kernel step"))?;
+
         serde_json::to_value(step).map_err(map_error)
     }
 
@@ -52,8 +54,11 @@ impl NativeRun {
     #[napi]
     pub fn resume(&mut self, result: Value) -> napi::Result<Value> {
         let result: EffectResult = serde_json::from_value(result).map_err(map_error)?;
+
         let step = self.session.resume(result).map_err(map_error)?;
+
         let _ = self.session.take_step();
+
         serde_json::to_value(step).map_err(map_error)
     }
 
@@ -65,7 +70,9 @@ impl NativeRun {
     #[napi]
     pub fn cancel(&mut self) -> napi::Result<Value> {
         let step = self.session.cancel();
+
         let _ = self.session.take_step();
+
         serde_json::to_value(step).map_err(map_error)
     }
 
@@ -77,8 +84,11 @@ impl NativeRun {
     #[napi]
     pub fn fail(&mut self, error: Value) -> napi::Result<Value> {
         let error: ProtocolError = serde_json::from_value(error).map_err(map_error)?;
+
         let step = self.session.fail(error).map_err(map_error)?;
+
         let _ = self.session.take_step();
+
         serde_json::to_value(step).map_err(map_error)
     }
 }

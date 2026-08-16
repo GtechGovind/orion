@@ -6,28 +6,91 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: release-preflight-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  blocked-release-check:
-    name: Confirm v0.1 publishing remains disabled
+  versions:
+    name: Coordinated package version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - name: Verify v0.1 pilot packages cannot publish
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Verify package versions agree
+        shell: bash
         run: |
           python - <<'PY'
+          import json
+          import re
+          import tomllib
           from pathlib import Path
 
-          manifests = [
-              *Path("crates").glob("*/Cargo.toml"),
-              *Path("bindings").glob("*/Cargo.toml"),
-          ]
-          missing = [str(path) for path in manifests if "publish = false" not in path.read_text()]
-          if missing:
-              raise SystemExit(f"Publishing is not disabled in: {missing}")
-
-          package = Path("sdks/javascript/package.json").read_text()
-          if '"private": true' not in package:
-              raise SystemExit("JavaScript package must remain private during the v0.1 pilot")
+          cargo = tomllib.loads(Path("Cargo.toml").read_text())["workspace"]["package"]["version"]
+          python = tomllib.loads(Path("sdks/python/pyproject.toml").read_text())["project"]["version"]
+          javascript = json.loads(Path("sdks/javascript/package.json").read_text())["version"]
+          kotlin_text = Path("sdks/kotlin/build.gradle.kts").read_text()
+          kotlin_match = re.search(r'^version\s*=\s*"([^"]+)"$', kotlin_text, re.MULTILINE)
+          if kotlin_match is None:
+              raise SystemExit("Kotlin version declaration was not found")
+          versions = {cargo, python, javascript, kotlin_match.group(1)}
+          if len(versions) != 1:
+              raise SystemExit(f"Package versions disagree: {sorted(versions)}")
+          print(f"coordinated version: {versions.pop()}")
           PY
-      - name: Explain status
-        run: echo "Release publishing is intentionally disabled during the v0.1 pilot."
+
+  packages:
+    name: Safe package preflight (${{ matrix.target }})
+    needs: versions
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: macos-arm64
+          - os: ubuntu-latest
+            target: linux-x64-gnu
+          - os: windows-latest
+            target: windows-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20.17.0"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - name: Build and test Python package without publishing
+        shell: bash
+        run: |
+          python -m pip install maturin "pydantic>=2.11,<3" ruff pyright
+          python -m compileall sdks/python/src examples/python/weather_agent
+          ruff check sdks/python/src sdks/python/tests examples/python/weather_agent
+          pyright -p sdks/python
+          (cd sdks/python && maturin build --release --locked --out dist)
+          python -m pip install --force-reinstall sdks/python/dist/*.whl
+          python -I -c "import orion_sdk; assert orion_sdk.Agent"
+          python -m unittest discover -s sdks/python/tests -v
+      - name: Build and test npm packages without publishing
+        working-directory: sdks/javascript
+        shell: bash
+        run: |
+          npm ci
+          npm run check
+          npm test
+          npm run check:package
+          npm run test:package
+      - name: Build and test Maven package without publishing
+        working-directory: sdks/kotlin
+        shell: bash
+        run: |
+          ./gradlew test publishToMavenLocal --no-daemon
+          ./gradlew -p consumer-smoke run --no-daemon
