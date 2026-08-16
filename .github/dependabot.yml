@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: "/"
+    schedule:
+      interval: monthly
+  - package-ecosystem: npm
+    directory: "/sdks/javascript"
+    schedule:
+      interval: monthly
+  - package-ecosystem: pip
+    directory: "/sdks/python"
+    schedule:
+      interval: monthly
+  - package-ecosystem: gradle
+    directory: "/sdks/kotlin"
+    schedule:
+      interval: monthly
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly

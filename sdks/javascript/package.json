@@ -1,0 +1,29 @@
+{
+  "name": "@orion-runtime/sdk",
+  "version": "0.0.0",
+  "description": "Reserved JavaScript/TypeScript SDK scaffold for Orion",
+  "private": true,
+  "license": "MIT OR Apache-2.0",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "check:package": "npm pack --dry-run",
+    "test": "node --test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orion-runtime/orion.git",
+    "directory": "sdks/javascript"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

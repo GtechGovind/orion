@@ -1,0 +1,30 @@
+name: Release preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  blocked-release-check:
+    name: Confirm publishing remains disabled
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify M0 packages cannot publish
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          manifests = list(Path("crates").glob("*/Cargo.toml"))
+          missing = [str(path) for path in manifests if "publish = false" not in path.read_text()]
+          if missing:
+              raise SystemExit(f"Publishing is not disabled in: {missing}")
+
+          package = Path("sdks/javascript/package.json").read_text()
+          if '"private": true' not in package:
+              raise SystemExit("JavaScript package must remain private during M0")
+          PY
+      - name: Explain status
+        run: echo "Release publishing is intentionally disabled during M0."

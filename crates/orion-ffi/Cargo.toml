@@ -1,0 +1,17 @@
+[package]
+name = "orion-ffi"
+description = "Proposed stable native boundary for Orion host SDKs"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+authors.workspace = true
+publish = false
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]

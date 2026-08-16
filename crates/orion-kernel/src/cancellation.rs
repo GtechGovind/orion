@@ -1,0 +1,1 @@
+//! Cancellation lifecycle semantics.

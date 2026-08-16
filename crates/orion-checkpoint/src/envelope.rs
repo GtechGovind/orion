@@ -1,0 +1,1 @@
+//! Versioned checkpoint-envelope ownership.

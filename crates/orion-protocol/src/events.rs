@@ -1,0 +1,1 @@
+//! Immutable lifecycle event envelopes.

@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    name: Rust scaffold
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@1.85.0
+        with:
+          components: clippy,rustfmt
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+
+  python:
+    name: Python scaffold
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m compileall sdks/python/src
+
+  javascript:
+    name: JavaScript package scaffold
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: sdks/javascript
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - run: npm pack --dry-run
+
+  repository:
+    name: Repository policy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify required project files
+        run: |
+          test -f README.md
+          test -f .github/CONTRIBUTING.md
+          test -f .github/SECURITY.md
+          test -f .github/SUPPORT.md
+          test -f .github/CODE_OF_CONDUCT.md
+          test -f docs/policy/governance.md
+          test -f docs/planning/roadmap.md
+          test -f LICENSE-MIT
+          test -f LICENSE-APACHE
+          test -f docs/README.md
+          test -f docs/development/repository-layout.md
+          test -f docs/contracts/host-sdk.md
+          test -f docs/decisions/0000-template.md
+          test -f docs/decisions/0001-rust-semantic-kernel.md

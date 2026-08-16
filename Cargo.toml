@@ -1,0 +1,27 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/orion-protocol",
+  "crates/orion-kernel",
+  "crates/orion-checkpoint",
+  "crates/orion-policy",
+  "crates/orion-ffi",
+  "crates/orion-testing",
+]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/orion-runtime/orion"
+homepage = "https://github.com/orion-runtime/orion"
+authors = ["Orion contributors"]
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
