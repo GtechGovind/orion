@@ -20,6 +20,7 @@ jobs:
     name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     env:
+      QODANA_PYTHON_PATH: ${{ matrix.python_path }}
       QODANA_TOKEN: ${{ secrets[matrix.token] }}
     strategy:
       fail-fast: false
@@ -30,21 +31,25 @@ jobs:
             config: .qodana/rust.yaml
             requires_token: true
             token: QODANA_RUST_TOKEN
+            python_path: ""
           - name: Python
             id: python
             config: .qodana/python.yaml
             requires_token: false
             token: QODANA_PYTHON_TOKEN
+            python_path: /data/cache/orion-python/bin/python
           - name: JavaScript and TypeScript
             id: javascript
             config: .qodana/javascript.yaml
             requires_token: true
             token: QODANA_JAVASCRIPT_TOKEN
+            python_path: ""
           - name: Kotlin and JVM
             id: kotlin
             config: qodana.yaml
             requires_token: false
             token: QODANA_KOTLIN_TOKEN
+            python_path: ""
 
     steps:
       - name: Check out the analyzed revision

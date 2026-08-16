@@ -4,10 +4,12 @@ linter: qodana-python-community
 profile:
   name: qodana.recommended
 
-# Give PyCharm's inspections the same declared runtime dependency that strict
-# Pyright and package consumers use. Without it, unresolved Pydantic imports
-# cascade into invalid type and dataclass diagnostics.
-bootstrap: python3 -m pip install "pydantic>=2.11,<3"
+# Give PyCharm's inspections an explicit interpreter with the same declared
+# runtime dependency that strict Pyright and package consumers use. Qodana's
+# cache directory persists this environment between runs.
+bootstrap: |
+  python3 -m venv /data/cache/orion-python
+  /data/cache/orion-python/bin/python -m pip install --disable-pip-version-check "pydantic>=2.11,<3"
 
 failureConditions:
   severityThresholds:
