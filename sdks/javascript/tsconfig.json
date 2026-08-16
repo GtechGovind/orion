@@ -2,13 +2,21 @@
   "compilerOptions": {
     "declaration": true,
     "exactOptionalPropertyTypes": true,
+    "isolatedModules": true,
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
     "noEmitOnError": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "outDir": "dist",
     "rootDir": "src",
     "strict": true,
-    "target": "ES2022"
+    "target": "ES2022",
+    "verbatimModuleSyntax": true
   },
   "include": ["src/**/*.ts"]
 }

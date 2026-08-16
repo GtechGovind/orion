@@ -19,13 +19,15 @@ subdirectories.
 ## Guides
 
 - [Pilot guide](guides/pilot.md) — build, test, and supported boundary
-- [LLM connectivity](guides/llm-connectivity.md) — adapters, credentials, and endpoints
+- [SDK installation](guides/installation.md) — consume verified local packages in another project
+- [LLM connectivity](guides/llm-connectivity.md) — provider models, credentials, and endpoints
 
 ## Decisions
 
 - [ADR guide](decisions/README.md) — statuses and decision workflow
 - [ADR template](decisions/0000-template.md) — required evidence and validation structure
-- [ADR-0001](decisions/0001-rust-semantic-kernel.md) — proposed Rust semantic kernel
+- [ADR-0001](decisions/0001-rust-semantic-kernel.md) — accepted Rust semantic kernel
+- [ADR-0002](decisions/0002-cross-language-typed-schemas.md) — one typed SDK workflow and Rust schema validation
 
 ## Development
 
@@ -34,7 +36,8 @@ subdirectories.
 
 ## Releases and compatibility
 
-- [Release process](release/process.md) — future gated publishing workflow
+- [Release process](release/process.md) — coordinated native SDK release gates
+- [Registry publishing](release/publishing.md) — coordinates, ownership setup, release gates, and recovery
 - [Versioning](release/versioning.md) — compatibility areas that still require decisions
 
 ## Project direction and policy

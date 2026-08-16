@@ -11,22 +11,27 @@ step(command) -> events + effect | terminal outcome
 resume(effect result) -> events + next effect | terminal outcome
 ```
 
-## Rust owns
+## Rust owns today
 
 - Legal transitions and lifecycle invariants
-- Run, turn, action, checkpoint, and event sequencing
-- Durable envelope semantics and migrations
-- Retry eligibility, budgets, deadlines, and approval state
-- Side-effect identity and replay decisions
+- Run, turn, tool-call, and event sequencing
+- Outstanding-effect matching and bounded execution
+- Tool-argument and structured-output schema validation
 - Protocol validation
+
+## Reserved for future Rust layers
+
+- Durable checkpoint envelopes and migrations
+- Retry eligibility, budgets, deadlines, and approval state
+- Side-effect identity, receipts, and replay decisions
 
 ## Host SDKs own
 
-- Language-native `Agent` and `Runner` APIs
+- One language-native typed `Agent.run`/`Agent.stream` API
 - Provider clients and provider authentication
 - User-defined tools and callbacks
 - Promise, coroutine, and `asyncio` integration
-- Storage transport and framework integrations
+- Future storage transport and framework integrations
 - Native exception and cancellation mapping
 
 ## Boundary constraints

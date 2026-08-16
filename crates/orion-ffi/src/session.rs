@@ -18,6 +18,7 @@ impl RunSession {
     /// Returns a kernel validation error when the command is invalid.
     pub fn start(command: StartRun) -> Result<Self, KernelError> {
         let (kernel, step) = Kernel::start(command)?;
+
         Ok(Self {
             kernel,
             current: Some(step),
@@ -48,14 +49,18 @@ impl RunSession {
     /// Returns a kernel error for a terminal run, missing effect, or mismatch.
     pub fn resume(&mut self, result: EffectResult) -> Result<Step, KernelError> {
         let step = self.kernel.resume(result)?;
+
         self.current = Some(step.clone());
+
         Ok(step)
     }
 
     /// Cancels the active run.
     pub fn cancel(&mut self) -> Step {
         let step = self.kernel.cancel();
+
         self.current = Some(step.clone());
+
         step
     }
 
@@ -66,7 +71,9 @@ impl RunSession {
     /// Returns [`KernelError::TerminalRun`] when the session already ended.
     pub fn fail(&mut self, error: ProtocolError) -> Result<Step, KernelError> {
         let step = self.kernel.fail(error)?;
+
         self.current = Some(step.clone());
+
         Ok(step)
     }
 

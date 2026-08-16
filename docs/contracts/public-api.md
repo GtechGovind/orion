@@ -2,43 +2,45 @@
 
 Status: implemented pilot contract for `0.1.x`.
 
-| Concept | Responsibility | Excludes |
-|---|---|---|
-| `Agent` | Immutable behavior, model reference, tools, schema, limits | Keys, clients, mutable run state |
-| `Runner` | Models, tools, native kernel session, cancellation, events | Provider-specific loop rules |
-| `ModelRef` | Serializable `{provider, model}` selection | Credentials and endpoints |
-| `ModelRegistry` | Resolve provider keys to host adapters | Global mutable registration |
-| `ModelAdapter` | Provider auth, translation, HTTP lifecycle | Tool and turn decisions |
-| `Tool` | JSON Schema plus host handler | Provider request types |
-| `RunEvent` | Ordered immutable lifecycle observation | Secrets and live objects |
-| `RunResult` | Output, usage, turns, event trace | Vendor response objects |
+Orion exposes one application workflow in Python, TypeScript, and Kotlin:
 
-Python uses awaitables and async iterators, TypeScript uses promises and async
-iterables, and Kotlin uses suspending functions and `Flow`. These are idiomatic
-bindings of one semantic contract.
+1. construct a provider model such as `OpenAI("gpt-5-mini")`;
+2. declare typed application functions/tools;
+3. construct `Agent` with a required typed output contract;
+4. call `agent.run(...)` or `agent.stream(...)`;
+5. consume an already decoded typed result.
 
-## Agent and model
+`ModelRef`, provider adapters, schema codecs, JSON Schema documents,
+`ModelRegistry`, `Runner`, protocol DTOs, and native sessions are internal.
+They are not alternate public APIs.
 
-Required agent fields are `id`, `name`, `instructions`, and `model`. The model
-accepts `provider:model`; the canonical representation is:
+| Concept | Python | TypeScript | Kotlin |
+|---|---|---|---|
+| Model | `OpenAI("id")` | `new OpenAI("id")` | `OpenAI("id")` |
+| Tool | typed function | `tool({input, output, execute})` | `tool(name, description, function)` |
+| Output | dataclass/Pydantic type | Zod schema | `KSerializer` |
+| Run | `await agent.run(input)` | `await agent.run(input)` | `agent.run(input)` |
+| Stream | async iterator | async iterator | cold `Flow` |
+| Result | `AgentResult[T]` | `AgentResult<T>` | `AgentResult<T>` |
 
-```json
-{"provider":"openai","model":"gpt-5-mini"}
-```
+Python derives tool schemas from function annotations and descriptions from
+docstrings. TypeScript requires one `tool` declaration because static types are
+erased; Zod supplies runtime input/output contracts. Kotlin derives schemas and
+codecs from `@Serializable` types and adapts typed function references to its
+suspending tool contract. Kotlin tool names are explicit stable identifiers
+because the JVM does not reliably retain a source function name after callable
+reference adaptation.
 
-Tool functions remain in the host. Only name, description, and input JSON
-Schema cross the native boundary. Settings include portable temperature and token limits
-plus provider-keyed opaque options. Secrets never belong in settings.
+All three SDKs convert their host contracts to JSON Schema Draft 2020-12. Rust
+validates every schema at run creation, validates model-produced tool arguments
+before requesting a callback, and validates structured terminal JSON before
+completion. The SDK then decodes the Rust-validated terminal value into the
+configured host type.
 
-## Runner semantics
+Runs execute tool calls sequentially in provider order and permit one
+outstanding effect. Reaching the configured turn limit fails with
+`turn_limit_exceeded`. Cancellation is propagated to the native run and active
+host operation.
 
-`run` returns one `RunResult`. `run_stream`/`runStream` emits ordered lifecycle
-events followed by that result. A run has at most one outstanding effect. The
-host result must match it. Calls are executed sequentially in provider order.
-
-A model response without tool calls completes the run. Calls start tool
-execution and their results enter the next model turn. Reaching `max_turns`
-while requesting tools fails with `turn_limit_exceeded`.
-
-The protocol is `1.0`. Major versions are breaking. Minor versions add
-backwards-compatible fields or variants.
+Public runtime features are complete only when Rust owns their shared semantics
+and all supported SDKs expose the same capability through this canonical flow.

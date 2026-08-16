@@ -1,5 +1,5 @@
 [build-system]
-requires = ["maturin>=1.9,<2"]
+requires = ["maturin>=1.9.3,<2"]
 build-backend = "maturin"
 
 [project]
@@ -8,28 +8,47 @@ version = "0.1.0"
 description = "Python SDK for the Orion Rust agent runtime pilot"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT OR Apache-2.0" }
+license = "MIT OR Apache-2.0"
+license-files = ["LICENSE-APACHE", "LICENSE-MIT", "NOTICE"]
 authors = [{ name = "Govind Yadav", email = "gtech.govind2000@gmail.com" }]
+maintainers = [{ name = "Govind Yadav", email = "gtech.govind2000@gmail.com" }]
+keywords = ["agent", "ai", "llm", "pyo3", "rust"]
 classifiers = [
   "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Operating System :: MacOS",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: POSIX :: Linux",
   "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Rust",
+  "Topic :: Software Development :: Libraries :: Application Frameworks",
   "Typing :: Typed",
 ]
-dependencies = []
+dependencies = ["pydantic>=2.11,<3"]
 
 [project.urls]
+Changelog = "https://github.com/GtechGovind/orion/blob/main/CHANGELOG.md"
+Documentation = "https://github.com/GtechGovind/orion/tree/main/docs"
+Issues = "https://github.com/GtechGovind/orion/issues"
 Repository = "https://github.com/GtechGovind/orion"
 
 [tool.maturin]
 manifest-path = "../../bindings/python/Cargo.toml"
 module-name = "orion_sdk._native"
 python-source = "src"
+bindings = "pyo3"
+sdist-generator = "cargo"
+strip = true
 
 [tool.ruff]
 line-length = 100
 target-version = "py310"
 
 [tool.pyright]
-include = ["src", "tests"]
+include = ["src", "tests", "../../examples/python/weather_agent"]
 pythonVersion = "3.10"
-strict = ["src"]
+strict = ["src", "../../examples/python/weather_agent"]

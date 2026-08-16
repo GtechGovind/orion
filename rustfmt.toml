@@ -1,0 +1,12 @@
+# Canonical Rust formatting settings for this repository.
+edition = "2024"
+style_edition = "2024"
+max_width = 100
+hard_tabs = false
+tab_spaces = 4
+newline_style = "Unix"
+use_small_heuristics = "Default"
+
+# rustfmt intentionally removes blank lines immediately inside item and function
+# braces. Its blank-line bound is also not configurable on the pinned stable
+# toolchain. Logical phase spacing and intent comments are governed by AGENTS.md.

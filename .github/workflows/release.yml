@@ -1,0 +1,344 @@
+name: Production release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  authorize:
+    name: Authorize tag and version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Require a tagged commit merged into main
+        shell: bash
+        run: |
+          git fetch origin main --no-tags
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/main
+      - id: version
+        name: Verify coordinated package version
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import re
+          import tomllib
+          from pathlib import Path
+
+          tag = os.environ["GITHUB_REF_NAME"]
+          if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?", tag):
+              raise SystemExit(f"Unsupported release tag: {tag}")
+          cargo = tomllib.loads(Path("Cargo.toml").read_text())["workspace"]["package"]["version"]
+          python = tomllib.loads(Path("sdks/python/pyproject.toml").read_text())["project"]["version"]
+          javascript = json.loads(Path("sdks/javascript/package.json").read_text())["version"]
+          kotlin_text = Path("sdks/kotlin/build.gradle.kts").read_text()
+          kotlin_match = re.search(r'^version\s*=\s*"([^"]+)"$', kotlin_text, re.MULTILINE)
+          if kotlin_match is None:
+              raise SystemExit("Kotlin version declaration was not found")
+          versions = {cargo, python, javascript, kotlin_match.group(1)}
+          expected = tag[1:]
+          if versions != {expected}:
+              raise SystemExit(f"Tag {tag} does not match package versions: {sorted(versions)}")
+          with Path(os.environ["GITHUB_OUTPUT"]).open("a") as output:
+              output.write(f"version={expected}\n")
+          PY
+
+  native-packages:
+    name: Native packages (${{ matrix.target }})
+    needs: authorize
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            target: macos-arm64
+            expected-platform: darwin
+            expected-arch: arm64
+            node-platform: darwin-arm64
+            kotlin-os: macos
+            kotlin-arch: aarch64
+            kotlin-library: liborion_kotlin.dylib
+          - os: ubuntu-latest
+            target: linux-x64-gnu
+            expected-platform: linux
+            expected-arch: x86_64
+            node-platform: linux-x64-gnu
+            kotlin-os: linux
+            kotlin-arch: x86_64
+            kotlin-library: liborion_kotlin.so
+          - os: windows-latest
+            target: windows-x64
+            expected-platform: win32
+            expected-arch: AMD64
+            node-platform: win32-x64-msvc
+            kotlin-os: windows
+            kotlin-arch: x86_64
+            kotlin-library: orion_kotlin.dll
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20.17.0"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - name: Verify runner architecture
+        env:
+          EXPECTED_PLATFORM: ${{ matrix.expected-platform }}
+          EXPECTED_ARCH: ${{ matrix.expected-arch }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import platform
+          import sys
+          actual_platform = "win32" if sys.platform == "win32" else sys.platform
+          if actual_platform != os.environ["EXPECTED_PLATFORM"]:
+              raise SystemExit(f"Expected {os.environ['EXPECTED_PLATFORM']}, got {actual_platform}")
+          if platform.machine() != os.environ["EXPECTED_ARCH"]:
+              raise SystemExit(f"Expected {os.environ['EXPECTED_ARCH']}, got {platform.machine()}")
+          PY
+      - name: Check Python sources
+        shell: bash
+        run: |
+          python -m pip install "pydantic>=2.11,<3" ruff pyright
+          python -m compileall sdks/python/src examples/python/weather_agent
+          ruff check sdks/python/src sdks/python/tests examples/python/weather_agent
+          pyright -p sdks/python
+      - name: Build PyO3 wheel
+        uses: PyO3/maturin-action@86b9d133d34bc1b40018696f782949dac11bd380 # v1.49.4
+        with:
+          command: build
+          args: --release --locked --compatibility pypi --out ../../release-bundle/python
+          manylinux: "2_17"
+          maturin-version: v1.9.3
+          working-directory: sdks/python
+      - name: Test installed Python wheel
+        shell: bash
+        run: |
+          python -m pip install --force-reinstall release-bundle/python/*.whl
+          python -I -c "import orion_sdk; assert orion_sdk.Agent"
+          python -m unittest discover -s sdks/python/tests -v
+      - name: Build and test Node package
+        working-directory: sdks/javascript
+        shell: bash
+        run: |
+          npm ci
+          npm run check
+          npm test
+          npm run check:package
+          npm run test:package
+      - name: Build and test Kotlin package
+        working-directory: sdks/kotlin
+        shell: bash
+        run: |
+          ./gradlew test publishToMavenLocal --no-daemon
+          ./gradlew -p consumer-smoke run --no-daemon
+      - name: Stage native artifacts
+        env:
+          NODE_PLATFORM: ${{ matrix.node-platform }}
+          KOTLIN_OS: ${{ matrix.kotlin-os }}
+          KOTLIN_ARCH: ${{ matrix.kotlin-arch }}
+          KOTLIN_LIBRARY: ${{ matrix.kotlin-library }}
+        shell: bash
+        run: |
+          mkdir -p release-bundle/javascript
+          cp "sdks/javascript/dist/orion_native.${NODE_PLATFORM}.node" release-bundle/javascript/
+          mkdir -p "release-bundle/kotlin/${KOTLIN_OS}/${KOTLIN_ARCH}"
+          cp "target/release/${KOTLIN_LIBRARY}" "release-bundle/kotlin/${KOTLIN_OS}/${KOTLIN_ARCH}/"
+      - uses: actions/upload-artifact@v6
+        with:
+          name: native-${{ matrix.target }}-${{ github.sha }}
+          path: release-bundle/
+          if-no-files-found: error
+          retention-days: 14
+
+  assemble:
+    name: Assemble and verify release packages
+    needs: [authorize, native-packages]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20.17.0"
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: native-*-${{ github.sha }}
+          path: collected
+          merge-multiple: true
+      - name: Verify native artifact set
+        shell: bash
+        run: |
+          test "$(find collected/python -name '*.whl' -type f | wc -l)" -eq 3
+          test "$(find collected/javascript -name '*.node' -type f | wc -l)" -eq 3
+          test "$(find collected/kotlin -type f | wc -l)" -eq 3
+      - name: Assemble Python distributions
+        shell: bash
+        run: |
+          python -m pip install maturin twine
+          mkdir -p release-dist/python
+          cp collected/python/*.whl release-dist/python/
+          (cd sdks/python && maturin sdist --out ../../release-dist/python)
+          python -m twine check release-dist/python/*
+      - name: Assemble npm distributions and verify a clean consumer
+        working-directory: sdks/javascript
+        shell: bash
+        run: |
+          npm ci
+          npm run build
+          mkdir -p artifacts ../../release-dist/npm
+          cp ../../collected/javascript/*.node artifacts/
+          npm run release:prepare
+          for directory in npm/*; do npm pack "$directory" --ignore-scripts --pack-destination ../../release-dist/npm; done
+          npm pack --ignore-scripts --pack-destination ../../release-dist/npm
+          mkdir -p ../../release-consumer/npm
+          cd ../../release-consumer/npm
+          npm init -y
+          npm install --ignore-scripts ../../release-dist/npm/orion-runtime-sdk-linux-x64-gnu-${{ needs.authorize.outputs.version }}.tgz ../../release-dist/npm/orion-runtime-sdk-${{ needs.authorize.outputs.version }}.tgz
+          node --input-type=module -e 'const sdk = await import("@orion-runtime/sdk"); if (typeof sdk.Agent !== "function") throw new Error("Agent export did not load")'
+      - name: Assemble Maven distributions and verify a clean consumer
+        shell: bash
+        run: |
+          native_dir="$GITHUB_WORKSPACE/collected/kotlin"
+          maven_repo="$GITHUB_WORKSPACE/release-m2"
+          ./sdks/kotlin/gradlew -p sdks/kotlin clean test publishToMavenLocal --no-daemon -Porion.native.prebuiltDir="$native_dir" -Dmaven.repo.local="$maven_repo"
+          ./sdks/kotlin/gradlew -p sdks/kotlin/consumer-smoke run --no-daemon -Dmaven.repo.local="$maven_repo"
+          mkdir -p release-dist/maven
+          cp -R "$maven_repo/dev/orion/runtime/orion-kotlin-sdk/${{ needs.authorize.outputs.version }}/." release-dist/maven/
+      - name: Generate checksums
+        shell: bash
+        run: |
+          find release-dist -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 sha256sum > release-dist/SHA256SUMS
+          sha256sum --check release-dist/SHA256SUMS
+      - uses: actions/upload-artifact@v6
+        with:
+          name: release-packages-${{ github.ref_name }}-${{ github.sha }}
+          path: release-dist/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
+  publish-pypi:
+    name: Publish PyPI distributions
+    needs: [authorize, assemble]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: release-packages-${{ github.ref_name }}-${{ github.sha }}
+          path: release-dist
+      - uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: release-dist/python/
+
+  publish-npm:
+    name: Publish npm distributions
+    needs: [authorize, assemble]
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: https://registry.npmjs.org
+      - run: npm install --global npm@11.6.2
+      - uses: actions/download-artifact@v7
+        with:
+          name: release-packages-${{ github.ref_name }}-${{ github.sha }}
+          path: release-dist
+      - name: Publish platform packages before root
+        shell: bash
+        run: |
+          for package in release-dist/npm/*-darwin-arm64-*.tgz release-dist/npm/*-linux-x64-gnu-*.tgz release-dist/npm/*-win32-x64-msvc-*.tgz; do
+            npm publish "$package" --access public --provenance
+          done
+          npm publish "release-dist/npm/orion-runtime-sdk-${{ needs.authorize.outputs.version }}.tgz" --access public --provenance
+
+  publish-maven-central:
+    name: Publish Maven Central deployment
+    needs: [authorize, assemble]
+    runs-on: ubuntu-latest
+    environment: maven-central
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: native-*-${{ github.sha }}
+          path: collected
+          merge-multiple: true
+      - name: Reverify and publish multi-native JAR
+        env:
+          ORG_GRADLE_PROJECT_orionCentralPublishing: "true"
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.MAVEN_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.MAVEN_SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.MAVEN_SIGNING_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          native_dir="$GITHUB_WORKSPACE/collected/kotlin"
+          ./sdks/kotlin/gradlew -p sdks/kotlin clean test verifyNativeJar --no-daemon -Porion.native.prebuiltDir="$native_dir"
+          ./sdks/kotlin/gradlew -p sdks/kotlin publishAndReleaseToMavenCentral --no-daemon -Porion.native.prebuiltDir="$native_dir"
+
+  github-release:
+    name: Publish checksummed GitHub release
+    needs: [authorize, assemble, publish-pypi, publish-npm, publish-maven-central]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          name: release-packages-${{ github.ref_name }}-${{ github.sha }}
+          path: release-dist
+      - name: Create release from verified tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          mapfile -d '' assets < <(find release-dist -type f -print0)
+          gh release create "$GITHUB_REF_NAME" "${assets[@]}" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes --title "Orion $GITHUB_REF_NAME"

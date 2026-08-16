@@ -2,15 +2,17 @@
 
 ## Supported versions
 
-Orion has no supported release yet. This repository is a non-functional
-architecture scaffold.
+Orion has no supported stable release yet. The executable `0.1` pilot receives
+security fixes on the `main` branch, but its APIs and native package formats may
+change before the first published release.
 
 ## Reporting a vulnerability
 
-Do not open a public issue for a suspected vulnerability. Use the repository's
-private security-advisory channel once hosting is configured. Until then,
-security contact details remain intentionally unset rather than directing
-reports to an unverified address.
+Do not open a public issue for a suspected vulnerability. Report it privately
+through the repository's
+[GitHub security advisory form](https://github.com/GtechGovind/orion/security/advisories/new).
+Include affected versions or commits, reproduction steps, impact, and any known
+mitigation without attaching live credentials or sensitive model data.
 
 ## Security principles
 

@@ -1,0 +1,19 @@
+version: "1.0"
+
+linter: qodana-js
+profile:
+  name: qodana.recommended
+
+failureConditions:
+  severityThresholds:
+    critical: 0
+    high: 0
+
+exclude:
+  - name: All
+    paths:
+      - target
+      - sdks/javascript/node_modules
+      - sdks/kotlin/.gradle
+      - sdks/kotlin/build
+      - sdks/python/.venv
