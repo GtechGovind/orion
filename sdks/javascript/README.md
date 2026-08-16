@@ -59,8 +59,8 @@ ignored `local-packages/` directory:
 
 ```bash
 npm run package:local
-npm install ./local-packages/orion-runtime-sdk-<platform>-0.1.0.tgz \
-  ./local-packages/orion-runtime-sdk-0.1.0.tgz
+npm install ./local-packages/orion-runtime-sdk-<platform>-0.0.1.tgz \
+  ./local-packages/orion-runtime-sdk-0.0.1.tgz
 ```
 
 Replace `<platform>` with `darwin-arm64`, `linux-x64-gnu`, or

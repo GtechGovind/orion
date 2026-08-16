@@ -10,7 +10,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.orion.runtime:orion-kotlin-sdk:0.1.0")
+    implementation("dev.orion.runtime:orion-kotlin-sdk:0.0.1")
 }
 
 kotlin {
