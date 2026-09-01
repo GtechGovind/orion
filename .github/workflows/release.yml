@@ -193,7 +193,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: dtolnay/rust-toolchain@1.88.0
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: native-*-${{ github.sha }}
           path: collected
@@ -270,7 +270,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: release-packages-${{ github.ref_name }}-${{ github.sha }}
           path: release-dist
@@ -293,7 +293,7 @@ jobs:
           node-version: "24"
           registry-url: https://registry.npmjs.org
       - run: npm install --global npm@11.6.2
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: release-packages-${{ github.ref_name }}-${{ github.sha }}
           path: release-dist
@@ -322,7 +322,7 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: dtolnay/rust-toolchain@1.88.0
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: native-*-${{ github.sha }}
           path: collected
@@ -370,7 +370,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: release-packages-${{ github.ref_name }}-${{ github.sha }}
           path: release-dist
