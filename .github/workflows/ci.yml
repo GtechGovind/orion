@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@1.100.0
         with:
           components: clippy,rustfmt
       - run: cargo fmt --all --check
@@ -37,7 +37,7 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@1.100.0
       - run: python -m pip install maturin "pydantic>=2.11,<3" ruff pyright
       - run: python -m compileall sdks/python/src examples/python/weather_agent
       - run: ruff check sdks/python/src sdks/python/tests examples/python/weather_agent
@@ -62,7 +62,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version: "20.17.0"
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@1.100.0
       - run: npm ci
       - run: npm run check
       - run: npm test
@@ -83,7 +83,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@1.100.0
       - run: ./gradlew test publishToMavenLocal --no-daemon
         working-directory: sdks/kotlin
         shell: bash

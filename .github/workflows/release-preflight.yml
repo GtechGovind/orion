@@ -67,7 +67,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@1.100.0
       - name: Build and test Python package without publishing
         shell: bash
         run: |

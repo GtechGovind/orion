@@ -118,7 +118,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: dtolnay/rust-toolchain@1.88.0
+      - uses: dtolnay/rust-toolchain@1.100.0
       - uses: actions/download-artifact@v7
         with:
           pattern: native-*-${{ inputs.commit_sha }}
