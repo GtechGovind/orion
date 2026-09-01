@@ -169,7 +169,7 @@ jobs:
           cp "sdks/javascript/dist/orion_native.${NODE_PLATFORM}.node" release-bundle/javascript/
           mkdir -p "release-bundle/kotlin/${KOTLIN_OS}/${KOTLIN_ARCH}"
           cp "target/release/${KOTLIN_LIBRARY}" "release-bundle/kotlin/${KOTLIN_OS}/${KOTLIN_ARCH}/"
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: native-${{ matrix.target }}-${{ github.sha }}
           path: release-bundle/
@@ -252,7 +252,7 @@ jobs:
               | sed -E 's#  (maven|npm|python)/#  #'
           ) > release-dist/SHA256SUMS
           (cd release-dist && sha256sum --check SHA256SUMS)
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: release-packages-${{ github.ref_name }}-${{ github.sha }}
           path: release-dist/
