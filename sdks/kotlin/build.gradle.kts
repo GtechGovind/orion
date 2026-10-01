@@ -4,7 +4,7 @@ import org.gradle.jvm.tasks.Jar
 import org.gradle.plugins.signing.Sign
 
 plugins {
-    kotlin("jvm") version "2.4.10"
+    kotlin("jvm") version "2.4.20"
     kotlin("plugin.serialization") version "2.4.10"
     `java-library`
     `maven-publish`
